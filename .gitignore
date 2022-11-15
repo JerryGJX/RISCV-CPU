@@ -1,11 +1,12 @@
-testspace/*
+riscv/testspace/*
 
 *.o
 *.vcd
 
+.idea/*
 
-testcase/*
+riscv/testcase/*
 
-test/*
+riscv/test/*
 
 .gitmodules

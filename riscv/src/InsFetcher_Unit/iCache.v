@@ -1,10 +1,12 @@
-`include "definition.v"
+ `include "riscv/src/definition.v"
 
 module iCache(
     //cpu
     input wire clk,
     input wire rdy,
     input wire rst,
+
+    input wire clr,
 
     //from memctrl
     input wire in_from_memCtrl_valid,
@@ -22,7 +24,7 @@ module iCache(
     //to insFetcher
     // output wire out_to_insFetcher_valid,
     output wire out_to_insFetcher_hit,
-    output wire [`INSTRUCTION_TYPE ] out_to_insFetcher_ins,
+    output wire [`INSTRUCTION_TYPE ] out_to_insFetcher_ins
     // output wire [`ADDRESS_TYPE ] out_to_insFetcher_addr
 
 );

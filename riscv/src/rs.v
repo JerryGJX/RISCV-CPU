@@ -1,16 +1,16 @@
-`include "riscv/src/definition.v"
+`ifndef macro_rs
+`define macro_rs
+`include "definition.v"
 
-module RS(
+module RS (
     input wire clk,
     input wire rst,
-    input wire clr,
     input wire rdy,
 
     //RS
-    output reg RS_next_full,
-    output reg [`]
-
+    output reg RS_next_full
 
 );
 
 endmodule
+`endif

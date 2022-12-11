@@ -1,3 +1,5 @@
+`ifndef macro_rob
+`define macro_rob
 `include "definition.v"
 
 module rob (
@@ -164,3 +166,4 @@ module rob (
     end
   end
 endmodule
+`endif

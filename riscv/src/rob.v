@@ -7,7 +7,7 @@ module rob (
     input wire rst,
     input wire rdy,
 
-    output wire next_loop_full,
+    output wire rob_next_full,
 
     //false predict & rst
     //check
@@ -25,7 +25,7 @@ module rob (
     //from predictor,if jump, the flag is positive
 
     //commit
-    output reg [`ROB_POS_TYPE] commit_rob_pos,
+    output reg [`ROB_WRAP_POS_TYPE] commit_rob_pos,
 
     //rob to register
     output reg                 reg_commit_enable,
@@ -33,11 +33,11 @@ module rob (
     output reg [   `DATA_TYPE] reg_val,
 
     //rob to lsb
-    output reg                  store_commit_enable,
+    output reg                       store_commit_enable,
     //lsb to rob
-    input  wire                 lsb_load_ready,
-    input  wire [`ROB_POS_TYPE] lsb_load_rob_pos,
-    input  wire [   `DATA_TYPE] lsb_load_val,
+    input  wire                      lsb_load_ready,
+    input  wire [`ROB_WRAP_POS_TYPE] lsb_load_rob_pos,
+    input  wire [        `DATA_TYPE] lsb_load_val,
 
     //rob to predictor
     output reg br_commit_enable,
@@ -45,20 +45,20 @@ module rob (
     //output reg [`ADDR_TYPE] br_pc,
 
     //alu to rob, alu broadcast
-    input wire                 alu_result_ready,
-    input wire [`ROB_POS_TYPE] alu_result_rob_pos,
-    input wire [   `DATA_TYPE] alu_result_val,
-    input wire                 alu_result_jump,
-    input wire [   `ADDR_TYPE] alu_result_pc,
+    input wire                      alu_result_ready,
+    input wire [`ROB_WRAP_POS_TYPE] alu_result_rob_pos,
+    input wire [        `DATA_TYPE] alu_result_val,
+    input wire                      alu_result_jump,
+    input wire [        `ADDR_TYPE] alu_result_pc,
 
     //decoder to rob
-    input  wire [`ROB_POS_TYPE] rs1_pos,
-    input  wire [`ROB_POS_TYPE] rs2_pos,
-    output wire                 rs1_ready,
-    output wire                 rs2_ready,
-    output wire [   `DATA_TYPE] rs1_val,
-    output wire [   `DATA_TYPE] rs2_val,
-    output wire [`ROB_POS_TYPE] next_rob_pos
+    input  wire [`ROB_WRAP_POS_TYPE] rs1_pos,
+    input  wire [`ROB_WRAP_POS_TYPE] rs2_pos,
+    output wire                      rs1_ready,
+    output wire                      rs2_ready,
+    output wire [        `DATA_TYPE] rs1_val,
+    output wire [        `DATA_TYPE] rs2_val,
+    output wire [`ROB_WRAP_POS_TYPE] next_rob_pos
 
     //todo
 
@@ -74,28 +74,30 @@ module rob (
 
   reg [`ROB_POS_TYPE] loop_head, loop_tail;  //[loop_head,loop_tail)
   reg [`NUM_TYPE] ele_num;
-
-  wire commit_enable = (ele_num > 0) && (ready[loop_head] == `TRUE);
-
-  //   wire [`ROB_POS_TYPE] next_head = loop_head + (if_commit ? 4'b1 : 4'b0);
-  //   wire [`ROB_POS_TYPE] next_tail = loop_tail + (issue_ready ? 4'b1 : 4'b0);
-  wire [`NUM_TYPE] next_num = ele_num + (issue_ready ? 32'b1 : 32'b0) - (commit_enable ? 32'b1 : 32'b0);
-
-  assign next_loop_full = (next_num == `ROB_SIZE);
-
+  reg [`NUM_TYPE] next_num;
+  reg commit_enable;
+  //check
+  assign rob_next_full = (next_num == `ROB_SIZE);
   //form decoder
-  assign rs1_ready = ready[rs1_pos];
-  assign rs2_ready = ready[rs2_pos];
-  assign rs1_val = val[rs1_pos];
-  assign rs2_val = val[rs2_pos];
+  assign rs1_ready = ready[rs1_pos[`ROB_POS_TYPE]];
+  assign rs2_ready = ready[rs2_pos[`ROB_POS_TYPE]];
+  assign rs1_val = val[rs1_pos[`ROB_POS_TYPE]];
+  assign rs2_val = val[rs2_pos[`ROB_POS_TYPE]];
+
+  always @(*) begin
+    commit_enable = (ele_num > 0) && (ready[loop_head] == `TRUE);
+    if (rst || rollback) next_num = 32'b0;
+    else next_num = ele_num + (issue_ready ? 32'b1 : 32'b0) - (commit_enable ? 32'b1 : 32'b0);
+  end
 
   always @(posedge clk) begin
     if (rst || rollback) begin
-      loop_head <= 0;
-      loop_tail <= 0;
-      ele_num   <= 0;
-      rollback  <= 0;
-      target_pc <= 0;
+      loop_head    <= 0;
+      loop_tail    <= 0;
+      ele_num      <= 0;
+      next_rob_pos <= 0;
+      rollback     <= 0;
+      target_pc    <= 0;
       for (integer i = 0; i < `ROB_SIZE; i += 1) begin
         ready[i]     <= 0;
         rd[i]        <= 0;
@@ -124,15 +126,15 @@ module rob (
       end
 
       if (lsb_load_ready) begin
-        ready[lsb_load_rob_pos] <= `TRUE;
-        val[lsb_load_rob_pos]   <= lsb_load_val;
+        ready[lsb_load_rob_pos[`ROB_POS_TYPE]] <= `TRUE;
+        val[lsb_load_rob_pos[`ROB_POS_TYPE]]   <= lsb_load_val;
       end
 
       if (alu_result_ready) begin
-        ready[alu_result_rob_pos] <= `TRUE;
-        val[alu_result_rob_pos] <= alu_result_val;
-        real_jump[alu_result_rob_pos] <= alu_result_jump;
-        dest_pc[alu_result_rob_pos] <= alu_result_pc;
+        ready[alu_result_rob_pos[`ROB_POS_TYPE]] <= `TRUE;
+        val[alu_result_rob_pos[`ROB_POS_TYPE]] <= alu_result_val;
+        real_jump[alu_result_rob_pos[`ROB_POS_TYPE]] <= alu_result_jump;
+        dest_pc[alu_result_rob_pos[`ROB_POS_TYPE]] <= alu_result_pc;
       end
 
       reg_commit_enable <= `FALSE;
@@ -140,7 +142,7 @@ module rob (
       br_commit_enable <= `FALSE;
 
       if (commit_enable) begin
-        commit_rob_pos <= loop_head;
+        commit_rob_pos <= {1'b1, loop_head};
         if (
         opEnum[loop_head] == `OPENUM_SB|| 
         opEnum[loop_head] == `OPENUM_SH|| 

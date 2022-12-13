@@ -6,14 +6,17 @@
 //element type
 `define INST_TYPE 31:0
 `define ADDR_TYPE 31:0
-`define IMM_TYPE 31:0//for imm
+//`define IMM_TYPE 31:0//for imm
 `define DATA_TYPE 31:0//for data
 `define NUM_TYPE 31:0
+
+`define STATUS_TYPE 1:0
 
 
 //position type
 `define REG_POS_TYPE 4:0//for rs1,rs2,rd
 `define ROB_POS_TYPE 3:0
+`define ROB_WRAP_POS_TYPE 4:0
 `define RS_POS_TYPE 3:0
 `define LSB_POS_TYPE 3:0
 
@@ -25,6 +28,25 @@
 `define FUNC3_RANGE 14:12
 `define RD_RANGE 11:7
 `define OPCODE_RANGE 6:0
+
+//size of element
+`define ROB_SIZE 32'd16
+`define RS_SIZE 32'd16
+`define REG_SIZE 32'd32
+`define LSB_SIZE 32'd16
+
+//for lsb
+`define LS_TYPE 2:0
+`define BYTE_TYPE 2'b00
+`define HALF_TYPE 2'b01
+`define WORD_TYPE 2'b10
+
+
+//default value
+`define BLANK_INST 32'd0
+`define BLANK_ADDR 32'd0
+`define PC_DEFALT_STEP 32'd4
+
 
 //opcode
 `define OPCODE_TYPE 6:0
@@ -91,20 +113,6 @@
 
 `define FUNC7_SRLI 7'h0
 `define FUNC7_SRAI 7'h20
-
-
-
-//size of element
-`define ROB_SIZE 32'd16
-`define RS_SIZE 32'd16
-`define REG_SIZE 32'd32
-`define LSB_SIZE 32'd16
-
-
-//default value
-`define BLANK_INS 32'd0
-`define BLANK_ADDR 32'd0
-`define PC_DEFALT_STEP 32'd4
 
 
 

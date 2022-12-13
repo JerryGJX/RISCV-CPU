@@ -19,24 +19,20 @@ module iFetch (
     input  wire [`INST_TYPE] mem_result_inst,
 
     //with rob, handle pc fix
-    input wire rob_set_pc_ready,
+    input wire              rob_set_pc_ready,
     input wire [`ADDR_TYPE] rob_set_pc,
-    input wire rob_br_commit,
-    input wire rob_br_jump,
+    input wire              rob_br_commit,
+    input wire              rob_br_jump,
 
 
     //to decoder
-    output reg                 inst_rdy,
-    output reg [ `OPENUM_TYPE] inst_openum,
-    output reg [`REG_POS_TYPE] inst_rd,
-    output reg [`REG_POS_TYPE] inst_rs1,
-    output reg [`REG_POS_TYPE] inst_rs2,
-    output reg [   `DATA_TYPE] inst_imm,
-    output reg [   `ADDR_TYPE] inst_pc,
-    output reg                 inst_pred_jump,
-    output reg                 ready_inst,
-    output reg                 lsb_enable,
-    output reg                 rs_enable
+    output reg                inst_rdy,
+    output reg [`OPENUM_TYPE] inst_openum,
+    output reg [  `INST_TYPE] inst_val,
+    output reg [  `ADDR_TYPE] inst_pc,
+    output reg                inst_pred_jump,
+    output reg                lsb_enable,
+    output reg                rs_enable
 );
 
   parameter STATUS_IDLE = 0, STATUS_FETCH = 1;
@@ -64,13 +60,12 @@ module iFetch (
   reg [`ADDR_TYPE] pred_pc;
   reg pred_jump;
 
+  reg [1:0] jump_record;
+
   //local
+
   reg [`OPENUM_TYPE] local_inst_openum;
-  reg [`REG_POS_TYPE] local_inst_rd;
-  reg [`REG_POS_TYPE] local_inst_rs1;
-  reg [`REG_POS_TYPE] local_inst_rs2;
-  reg [`DATA_TYPE] local_inst_imm;
-  reg local_ready_inst;
+
   reg local_lsb_enable;
   reg local_rs_enable;
 
@@ -78,6 +73,31 @@ module iFetch (
   reg local_lsb_dispatch_enable;
   reg local_issue_enable;
 
+
+  always @(posedge clk) begin
+    if (rob_br_commit) begin
+      jump_record <= jump_record << 1 + rob_br_jump;
+    end
+  end
+
+  always @(*) begin
+    pred_pc   = pc + 4;
+    pred_jump = `FALSE;
+
+    case (hit_inst_val[`OPCODE_RANGE])
+      `OPCODE_JAL: begin
+        pred_pc = pc + {{12{hit_inst_val[31]}}, hit_inst_val[19:12], hit_inst_val[20], hit_inst_val[30:21], 1'b0};
+        pred_jump = `TRUE;
+      end
+      `OPCODE_BR: begin
+        if (jump_record >= 2) begin
+          pred_pc = pc + {{20{hit_inst_val[31]}}, hit_inst_val[7], hit_inst_val[30:25], hit_inst_val[11:8], 1'b0};
+          pred_jump = `TRUE;
+        end
+      end
+      default;
+    endcase
+  end
 
 
   //decode
@@ -88,9 +108,9 @@ module iFetch (
     local_lsb_dispatch_enable = `FALSE;
     local_issue_enable        = `FALSE;
 
-    local_inst_rd             = hit_inst_val[`RD_RANGE];
-    local_inst_rs1            = hit_inst_val[`RS1_RANGE];
-    local_inst_rs2            = hit_inst_val[`RS2_RANGE];
+    // local_inst_rd             = hit_inst_val[`RD_RANGE];
+    // local_inst_rs1            = hit_inst_val[`RS1_RANGE];
+    // local_inst_rs2            = hit_inst_val[`RS2_RANGE];
 
     case (hit_inst_val[`OPCODE_RANGE])
       `OPCODE_RC: begin
@@ -142,7 +162,6 @@ module iFetch (
 
       `OPCODE_RI: begin
         local_rs_enable = `TRUE;
-        local_inst_imm  = {{21{hit_inst_val[31]}}, hit_inst_val[30:20]};
         case (hit_inst_val[`FUNC3_RANGE])
           `FUNC3_ADDI: begin
             local_inst_openum = `OPENUM_ADDI;
@@ -182,7 +201,6 @@ module iFetch (
 
       `OPCODE_LD: begin
         local_lsb_enable = `TRUE;
-        local_inst_imm   = {{21{hit_inst_val[31]}}, hit_inst_val[30:20]};
         case (hit_inst_val[`FUNC3_RANGE])
           `FUNC3_LB: begin
             local_inst_openum = `OPENUM_LB;
@@ -205,9 +223,6 @@ module iFetch (
 
       `OPCODE_ST: begin
         local_lsb_enable = `TRUE;
-        local_inst_rd = 0;
-        local_ready_inst = `TRUE;
-        local_inst_imm = {{21{hit_inst_val[31]}}, hit_inst_val[30:25], hit_inst_val[11:7]};
         case (hit_inst_val[`FUNC3_RANGE])
           `FUNC3_SB: begin
             local_inst_openum = `OPENUM_SB;
@@ -224,10 +239,6 @@ module iFetch (
 
       `OPCODE_BR: begin
         local_rs_enable = `TRUE;
-        local_inst_rd = 0;
-        local_inst_imm = {
-          {20{hit_inst_val[31]}}, hit_inst_val[7], hit_inst_val[30:25], hit_inst_val[11:8], 1'b0
-        };
         case (hit_inst_val[`FUNC3_RANGE])
           `FUNC3_BEQ: begin
             local_inst_openum = `OPENUM_BEQ;
@@ -252,28 +263,26 @@ module iFetch (
       end
 
       `OPCODE_JAL: begin
-        local_rs_enable = `TRUE;
-        local_inst_imm = {
-          {12{hit_inst_val[31]}}, hit_inst_val[19:12], hit_inst_val[20], hit_inst_val[30:21], 1'b0
-        };
+        local_rs_enable   = `TRUE;
+
         local_inst_openum = `OPENUM_JAL;
       end
 
       `OPCODE_JALR: begin
         local_rs_enable   = `TRUE;
-        local_inst_imm    = {{21{hit_inst_val[31]}}, hit_inst_val[30:20]};
+
         local_inst_openum = `OPENUM_JALR;
       end
 
       `OPCODE_LUI: begin
         local_rs_enable   = `TRUE;
-        local_inst_imm    = {hit_inst_val[31:12], 12'b0};
+
         local_inst_openum = `OPENUM_LUI;
       end
 
       `OPCODE_AUIPC: begin
         local_rs_enable   = `TRUE;
-        local_inst_imm    = {hit_inst_val[31:12], 12'b0};
+
         local_inst_openum = `OPENUM_AUIPC;
       end
       default;
@@ -308,11 +317,6 @@ module iFetch (
         if (hit && local_issue_enable) begin
           inst_rdy       <= `TRUE;
           inst_openum    <= local_inst_openum;
-          inst_rd        <= local_inst_rd;
-          inst_rs1       <= local_inst_rs1;
-          inst_rs2       <= local_inst_rs2;
-          inst_imm       <= local_inst_imm;
-          ready_inst     <= local_ready_inst;
           lsb_enable     <= local_lsb_dispatch_enable;
           rs_enable      <= local_rs_dispatch_enable;
           inst_pc        <= pc;
@@ -323,8 +327,21 @@ module iFetch (
         end
       end
 
-        if (status == `STATUS_IDLE)
-
+      if (status == STATUS_IDLE) begin
+        if (!hit) begin
+          mem_ctrl_pc     <= pc;
+          mem_ctrl_enable <= `TRUE;
+          status          <= STATUS_FETCH;
+        end
+      end else begin
+        if (mem_result_ready) begin
+          valid[pc[`INDEX_RANGE]]      <= `TRUE;
+          tag_store[pc[`INDEX_RANGE]]  <= pc[`TAG_RANGE];
+          inst_store[pc[`INDEX_RANGE]] <= mem_result_inst;
+          mem_ctrl_enable              <= `FALSE;
+          status                       <= STATUS_IDLE;
+        end
+      end
     end
   end
 

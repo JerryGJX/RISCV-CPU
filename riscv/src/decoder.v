@@ -8,10 +8,13 @@ module decoder (
 
 
     //from ifetch
-    input wire              inst_enable,
-    input wire [`INST_TYPE] inst,
-    input wire [`ADDR_TYPE] inst_pc,
-    input wire              inst_pred_jump,
+    input wire                inst_enable,
+    input wire [  `INST_TYPE] inst_val,
+    input wire [`OPENUM_TYPE] inst_openum,
+    input wire [  `ADDR_TYPE] inst_pc,
+    input wire                inst_pred_jump,
+    input wire                inst_lsb_enable,
+    input wire                inst_rs_enable,
 
 
     //issue
@@ -62,8 +65,8 @@ module decoder (
     output reg lsb_enable
 );
 
-  assign reg_rs1_pos = inst[`RS1_RANGE];
-  assign reg_rs2_pos = inst[`RS2_RANGE];
+  assign reg_rs1_pos = inst_val[`RS1_RANGE];
+  assign reg_rs2_pos = inst_val[`RS2_RANGE];
   assign rob_rs1_pos = reg_rs1_rob_pos;
   assign rob_rs2_pos = reg_rs2_rob_pos;
 
@@ -105,209 +108,70 @@ module decoder (
         issue_rs2_rob_pos = reg_rs2_rob_pos;
       end
 
-      rs_enable = `FALSE;
-      lsb_enable = `FALSE;
-      issue_ready_inst = `FALSE;
-      issue_rd = inst[`RD_RANGE];
 
-      case (inst[`OPCODE_RANGE])
+      issue_openum = inst_openum;
+      rs_enable = inst_rs_enable;
+      lsb_enable = inst_lsb_enable;
+      issue_ready_inst = `FALSE;
+      issue_rd = inst_val[`RD_RANGE];
+
+      case (inst_val[`OPCODE_RANGE])
 
         `OPCODE_RC: begin
-          rs_enable = `TRUE;
-          case (inst[`FUNC3_RANGE])
-            `FUNC3_ADD_SUB: begin
-              case (inst[`FUNC7_RANGE])
-                `FUNC7_ADD: begin
-                  issue_openum = `OPENUM_ADD;
-                end
-                `FUNC7_SUB: begin
-                  issue_openum = `OPENUM_SUB;
-                end
-                default;
-              endcase
-            end
-            `FUNC3_XOR: begin
-              issue_openum = `OPENUM_XOR;
-            end
-            `FUNC3_OR: begin
-              issue_openum = `OPENUM_OR;
-            end
-            `FUNC3_AND: begin
-              issue_openum = `OPENUM_AND;
-            end
-            `FUNC3_SLL: begin
-              issue_openum = `OPENUM_SLL;
-            end
-            `FUNC3_SRL_SRA: begin
-              case (inst[`FUNC7_RANGE])
-                `FUNC7_SRL: begin
-                  issue_openum = `OPENUM_SRL;
-                end
-                `FUNC7_SRA: begin
-                  issue_openum = `OPENUM_SRA;
-                end
-                default;
-              endcase
-            end
-            `FUNC3_SLT: begin
-              issue_openum = `OPENUM_SLT;
-            end
-            `FUNC3_SLTU: begin
-              issue_openum = `OPENUM_SLTU;
-            end
-            default;
-          endcase
         end
 
         `OPCODE_RI: begin
-          rs_enable = `TRUE;
           issue_rs2_rob_pos = 0;
           issue_rs2_val = 0;
-          issue_imm = {{21{inst[31]}}, inst[30:20]};
-          case (inst[`FUNC3_RANGE])
-            `FUNC3_ADDI: begin
-              issue_openum = `OPENUM_ADDI;
-            end
-            `FUNC3_XORI: begin
-              issue_openum = `OPENUM_XORI;
-            end
-            `FUNC3_ORI: begin
-              issue_openum = `OPENUM_ORI;
-            end
-            `FUNC3_ANDI: begin
-              issue_openum = `OPENUM_ANDI;
-            end
-            `FUNC3_SLLI: begin
-              issue_openum = `OPENUM_SLLI;
-            end
-            `FUNC3_SRLI_SRAI: begin
-              case (inst[`FUNC7_RANGE])
-                `FUNC7_SRLI: begin
-                  issue_openum = `OPENUM_SRLI;
-                end
-                `FUNC7_SRAI: begin
-                  issue_openum = `OPENUM_SRAI;
-                end
-                default;
-              endcase
-            end
-            `FUNC3_SLTI: begin
-              issue_openum = `OPENUM_SLTI;
-            end
-            `FUNC3_SLTIU: begin
-              issue_openum = `OPENUM_SLTIU;
-            end
-            default;
-          endcase
+          issue_imm = {{21{inst_val[31]}}, inst_val[30:20]};
+
         end
 
         `OPCODE_LD: begin
-          lsb_enable = `TRUE;
           issue_rs2_rob_pos = 0;
           issue_rs2_val = 0;
-          issue_imm = {{21{inst[31]}}, inst[30:20]};
-          case (inst[`FUNC3_RANGE])
-            `FUNC3_LB: begin
-              issue_openum = `OPENUM_LB;
-            end
-            `FUNC3_LH: begin
-              issue_openum = `OPENUM_LH;
-            end
-            `FUNC3_LW: begin
-              issue_openum = `OPENUM_LW;
-            end
-            `FUNC3_LBU: begin
-              issue_openum = `OPENUM_LBU;
-            end
-            `FUNC3_LHU: begin
-              issue_openum = `OPENUM_LHU;
-            end
-            default;
-          endcase
+          issue_imm = {{21{inst_val[31]}}, inst_val[30:20]};
         end
 
         `OPCODE_ST: begin
-          lsb_enable = `TRUE;
           issue_rd = 0;
           issue_ready_inst = `TRUE;
-          issue_imm = {{21{inst[31]}}, inst[30:25], inst[11:7]};
-          case (inst[`FUNC3_RANGE])
-            `FUNC3_SB: begin
-              issue_openum = `OPENUM_SB;
-            end
-            `FUNC3_SH: begin
-              issue_openum = `OPENUM_SH;
-            end
-            `FUNC3_SW: begin
-              issue_openum = `OPENUM_SW;
-            end
-            default;
-          endcase
+          issue_imm = {{21{inst_val[31]}}, inst_val[30:25], inst_val[11:7]};
         end
 
         `OPCODE_BR: begin
-          rs_enable = `TRUE;
           issue_rd  = 0;
-          issue_imm = {{20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0};
-          case (inst[`FUNC3_RANGE])
-            `FUNC3_BEQ: begin
-              issue_openum = `OPENUM_BEQ;
-            end
-            `FUNC3_BNE: begin
-              issue_openum = `OPENUM_BNE;
-            end
-            `FUNC3_BLT: begin
-              issue_openum = `OPENUM_BLT;
-            end
-            `FUNC3_BGE: begin
-              issue_openum = `OPENUM_BGE;
-            end
-            `FUNC3_BLTU: begin
-              issue_openum = `OPENUM_BLTU;
-            end
-            `FUNC3_BGEU: begin
-              issue_openum = `OPENUM_BGEU;
-            end
-            default;
-          endcase
+          issue_imm = {{20{inst_val[31]}}, inst_val[7], inst_val[30:25], inst_val[11:8], 1'b0};
         end
 
         `OPCODE_JAL: begin
-          rs_enable = `TRUE;
           issue_rs1_rob_pos = 0;
           issue_rs1_val = 0;
           issue_rs2_rob_pos = 0;
           issue_rs2_val = 0;
-          issue_imm = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
-          issue_openum = `OPENUM_JAL;
+          issue_imm = {{12{inst_val[31]}}, inst_val[19:12], inst_val[20], inst_val[30:21], 1'b0};
         end
 
         `OPCODE_JALR: begin
-          rs_enable = `TRUE;
           issue_rs2_rob_pos = 0;
           issue_rs2_val = 0;
-          issue_imm = {{21{inst[31]}}, inst[30:20]};
-          issue_openum = `OPENUM_JALR;
+          issue_imm = {{21{inst_val[31]}}, inst_val[30:20]};
         end
 
         `OPCODE_LUI: begin
-          rs_enable = `TRUE;
           issue_rs1_rob_pos = 0;
           issue_rs1_val = 0;
           issue_rs2_rob_pos = 0;
           issue_rs2_val = 0;
-          issue_imm = {inst[31:12], 12'b0};
-          issue_openum = `OPENUM_LUI;
+          issue_imm = {inst_val[31:12], 12'b0};
         end
 
         `OPCODE_AUIPC: begin
-          rs_enable = `TRUE;
           issue_rs1_rob_pos = 0;
           issue_rs1_val = 0;
           issue_rs2_rob_pos = 0;
           issue_rs2_val = 0;
-          issue_imm = {inst[31:12], 12'b0};
-          issue_openum = `OPENUM_AUIPC;
+          issue_imm = {inst_val[31:12], 12'b0};
         end
         default;
       endcase

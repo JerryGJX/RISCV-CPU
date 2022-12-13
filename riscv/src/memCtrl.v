@@ -5,7 +5,7 @@ module memCtrl (
     input wire clk,
     input wire rst,
     input wire rdy,
-    input wire rollback,
+    input wire clr,
 
     input  wire [ 7:0] mem_din,   // data input bus
     output reg  [ 7:0] mem_dout,  // data output bus

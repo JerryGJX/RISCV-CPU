@@ -7,7 +7,7 @@ module RS (
     input wire rst,
     input wire rdy,
 
-    input wire rollback,
+    input wire clr,
 
     //from issue
     input wire issue_enable,
@@ -78,7 +78,7 @@ module RS (
       if (ready[i] == `TRUE) max_ready_rs_pos = i;
     end
 
-    if (rst || rollback) next_busy_num = 32'b0;
+    if (rst || clr) next_busy_num = 32'b0;
     else
       next_busy_num = busy_num + (issue_enable ? 32'b1 : 32'b0) - (max_ready_rs_pos != `FLAG_POS ? 32'b1 : 32'b0);
 
@@ -86,7 +86,7 @@ module RS (
   end
 
   always @(posedge clk) begin
-    if (rst || rollback) begin
+    if (rst || clr) begin
       busy_num <= 32'b0;
       for (i = 0; i < `RS_SIZE; i = i + 1) begin
         busy[i] <= `FALSE;

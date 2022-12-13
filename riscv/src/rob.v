@@ -11,7 +11,7 @@ module rob (
 
     //false predict & rst
     //check
-    output reg rollback,
+    output reg clr,
     output reg [`ADDR_TYPE] target_pc,
 
 
@@ -86,17 +86,17 @@ module rob (
 
   always @(*) begin
     commit_enable = (ele_num > 0) && (ready[loop_head] == `TRUE);
-    if (rst || rollback) next_num = 32'b0;
+    if (rst || clr) next_num = 32'b0;
     else next_num = ele_num + (issue_ready ? 32'b1 : 32'b0) - (commit_enable ? 32'b1 : 32'b0);
   end
 
   always @(posedge clk) begin
-    if (rst || rollback) begin
+    if (rst || clr) begin
       loop_head    <= 0;
       loop_tail    <= 0;
       ele_num      <= 0;
       next_rob_pos <= 0;
-      rollback     <= 0;
+      clr     <= 0;
       target_pc    <= 0;
       for (integer i = 0; i < `ROB_SIZE; i += 1) begin
         ready[i]     <= 0;
@@ -159,7 +159,7 @@ module rob (
           br_commit_enable <= `TRUE;
           br_jump          <= real_jump[loop_head];
           if (pred_jump[loop_head] != real_jump[loop_head]) begin
-            rollback  <= `TRUE;
+            clr  <= `TRUE;
             target_pc <= dest_pc[loop_head];
           end
         end

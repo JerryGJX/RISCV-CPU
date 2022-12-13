@@ -1,6 +1,8 @@
 //wire status
 `define TRUE 1'b1
 `define FALSE 1'b0
+`define LSB_READ 1'b0
+`define LSB_WRITE 1'b1
 
 
 //element type

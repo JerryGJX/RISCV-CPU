@@ -4,7 +4,7 @@ module decoder (
     input wire clk,
     input wire rst,
     input wire rdy,
-    input wire rollback,
+    input wire clr,
 
 
     //from ifetch
@@ -71,7 +71,7 @@ module decoder (
   assign rob_rs2_pos = reg_rs2_rob_pos;
 
   always @(*) begin
-    if (rst || !inst_enable || rollback) begin
+    if (rst || !inst_enable || clr) begin
       issue_enable = `FALSE;
       rs_enable = `FALSE;
       lsb_enable = `FALSE;

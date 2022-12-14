@@ -13,26 +13,26 @@ module iFetch (
 
 
     //with mem ctrl
-    output reg               mem_ctrl_enable,
-    output reg  [`ADDR_TYPE] mem_ctrl_pc,
-    input  wire              mem_result_ready,
-    input  wire [`INST_TYPE] mem_result_inst,
+    output reg               if_to_mc_enable,
+    output reg  [`ADDR_TYPE] if_to_mc_pc,
+    input  wire              mc_to_if_done,
+    input  wire [`INST_TYPE] mc_to_if_result,
 
     //with rob, handle pc fix
-    input wire              rob_set_pc_ready,
-    input wire [`ADDR_TYPE] rob_set_pc,
-    input wire              rob_br_commit,
-    input wire              rob_br_jump,
+    input wire              rob_to_if_set_pc_enable,
+    input wire [`ADDR_TYPE] rob_to_if_set_pc_val,
+    input wire              rob_to_if_br_commit,
+    input wire              rob_to_if_br_jump,
 
 
     //to decoder
-    output reg                inst_rdy,
-    output reg [`OPENUM_TYPE] inst_openum,
-    output reg [  `INST_TYPE] inst_val,
-    output reg [  `ADDR_TYPE] inst_pc,
-    output reg                inst_pred_jump,
-    output reg                lsb_enable,
-    output reg                rs_enable
+    output reg                if_to_dc_enable,
+    output reg [`OPENUM_TYPE] if_to_dc_openum,
+    output reg [  `INST_TYPE] if_to_dc_inst_val,
+    output reg [  `ADDR_TYPE] if_to_dc_pc,
+    output reg                if_to_dc_pred_jump,
+    output reg                if_to_dc_lsb_enable,
+    output reg                if_to_dc_rs_enable
 );
 
   parameter STATUS_IDLE = 0, STATUS_FETCH = 1;
@@ -48,7 +48,7 @@ module iFetch (
   `define INDEX_RANGE 9:2
   `define TAG_RANGE 31:10
 
-  reg valid[`ICACHE_SIZE - 1:0];
+  reg [`ICACHE_SIZE - 1:0] valid;  //bitset
   reg [`TAG_RANGE] tag_store[`ICACHE_SIZE - 1:0];
   reg [`INST_TYPE] inst_store[`ICACHE_SIZE - 1:0];
 
@@ -75,8 +75,8 @@ module iFetch (
 
 
   always @(posedge clk) begin
-    if (rob_br_commit) begin
-      jump_record <= jump_record << 1 + rob_br_jump;
+    if (rob_to_if_br_commit) begin
+      jump_record <= jump_record << 1 + rob_to_if_br_jump;
     end
   end
 
@@ -298,47 +298,44 @@ module iFetch (
   always @(posedge clk) begin
     if (rst) begin
       pc              <= `BLANK_ADDR;
-      mem_ctrl_pc     <= `BLANK_ADDR;
-      mem_ctrl_enable <= `FALSE;
+      if_to_mc_pc     <= `BLANK_ADDR;
+      if_to_mc_enable <= `FALSE;
       status          <= STATUS_IDLE;
-      inst_rdy        <= `FALSE;
-      for (i = 0; i < `ICACHE_SIZE; i = i + 1) begin
-        valid[i]      <= `FALSE;
-        tag_store[i]  <= 0;
-        inst_store[i] <= `BLANK_INST;
-      end
+      if_to_dc_enable <= `FALSE;
+      valid           <= 0;
     end else if (!rdy) begin
       ;
     end else begin
-      if (rob_set_pc_ready) begin
-        inst_rdy <= `FALSE;
-        pc       <= rob_set_pc;
+      if (rob_to_if_set_pc_enable) begin
+        if_to_dc_enable <= `FALSE;
+        pc              <= rob_to_if_set_pc_val;
       end else begin
         if (hit && local_issue_enable) begin
-          inst_rdy       <= `TRUE;
-          inst_openum    <= local_inst_openum;
-          lsb_enable     <= local_lsb_dispatch_enable;
-          rs_enable      <= local_rs_dispatch_enable;
-          inst_pc        <= pc;
-          pc             <= pred_pc;
-          inst_pred_jump <= pred_jump;
+          if_to_dc_enable     <= `TRUE;
+          if_to_dc_openum     <= local_inst_openum;
+          if_to_dc_inst_val   <= hit_inst_val;
+          if_to_dc_lsb_enable <= local_lsb_dispatch_enable;
+          if_to_dc_rs_enable  <= local_rs_dispatch_enable;
+          if_to_dc_pc         <= pc;
+          pc                  <= pred_pc;
+          if_to_dc_pred_jump  <= pred_jump;
         end else begin
-          inst_rdy <= `FALSE;
+          if_to_dc_enable <= `FALSE;
         end
       end
 
       if (status == STATUS_IDLE) begin
         if (!hit) begin
-          mem_ctrl_pc     <= pc;
-          mem_ctrl_enable <= `TRUE;
+          if_to_mc_pc     <= pc;
+          if_to_mc_enable <= `TRUE;
           status          <= STATUS_FETCH;
         end
       end else begin
-        if (mem_result_ready) begin
+        if (mc_to_if_done) begin
           valid[pc[`INDEX_RANGE]]      <= `TRUE;
           tag_store[pc[`INDEX_RANGE]]  <= pc[`TAG_RANGE];
-          inst_store[pc[`INDEX_RANGE]] <= mem_result_inst;
-          mem_ctrl_enable              <= `FALSE;
+          inst_store[pc[`INDEX_RANGE]] <= mc_to_if_result;
+          if_to_mc_enable              <= `FALSE;
           status                       <= STATUS_IDLE;
         end
       end

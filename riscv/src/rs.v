@@ -10,28 +10,28 @@ module RS (
     input wire clr,
 
     //from issue
-    input wire issue_enable,
-    input wire [`OPENUM_TYPE] issue_openum,
-    input wire [`ROB_WRAP_POS_TYPE] issue_rob_pos,
-    input wire [`DATA_TYPE] issue_rs1_val,
-    input wire [`ROB_WRAP_POS_TYPE] issue_rs1_rob_pos,
-    input wire [`DATA_TYPE] issue_rs2_val,
-    input wire [`ROB_WRAP_POS_TYPE] issue_rs2_rob_pos,
-    input wire [`DATA_TYPE] issue_imm,
-    input wire [`ADDR_TYPE] issue_pc,
+    input wire issue_to_rs_enable,
+    input wire [`OPENUM_TYPE] issue_to_rs_openum,
+    input wire [`ROB_WRAP_POS_TYPE] issue_to_rs_rob_pos,
+    input wire [`DATA_TYPE] issue_to_rs_rs1_val,
+    input wire [`ROB_WRAP_POS_TYPE] issue_to_rs_rs1_rob_pos,
+    input wire [`DATA_TYPE] issue_to_rs_rs2_val,
+    input wire [`ROB_WRAP_POS_TYPE] issue_to_rs_rs2_rob_pos,
+    input wire [`DATA_TYPE] issue_to_rs_imm,
+    input wire [`ADDR_TYPE] issue_to_rs_pc,
 
     //with ALU
-    input wire                      alu_result_ready,
-    input wire [`ROB_WRAP_POS_TYPE] alu_result_rob_pos,
-    input wire [        `DATA_TYPE] alu_result_val,
+    input wire                      alu_to_rs_result_ready,
+    input wire [`ROB_WRAP_POS_TYPE] alu_to_rs_result_rob_pos,
+    input wire [        `DATA_TYPE] alu_to_rs_result_val,
 
-    output reg                      alu_enable,
-    output reg [      `OPENUM_TYPE] alu_openum,
-    output reg [`ROB_WRAP_POS_TYPE] alu_rob_pos,
-    output reg [        `DATA_TYPE] alu_rs1_val,
-    output reg [        `DATA_TYPE] alu_rs2_val,
-    output reg [        `DATA_TYPE] alu_imm,
-    output reg [        `ADDR_TYPE] alu_pc,
+    output reg                      rs_to_alu_enable,
+    output reg [      `OPENUM_TYPE] rs_to_alu_openum,
+    output reg [`ROB_WRAP_POS_TYPE] rs_to_alu_rob_pos,
+    output reg [        `DATA_TYPE] rs_to_alu_rs1_val,
+    output reg [        `DATA_TYPE] rs_to_alu_rs2_val,
+    output reg [        `DATA_TYPE] rs_to_alu_imm,
+    output reg [        `ADDR_TYPE] rs_to_alu_pc,
 
     //with LSB
     input wire                      lsb_load_result_ready,
@@ -80,7 +80,7 @@ module RS (
 
     if (rst || clr) next_busy_num = 32'b0;
     else
-      next_busy_num = busy_num + (issue_enable ? 32'b1 : 32'b0) - (max_ready_rs_pos != `FLAG_POS ? 32'b1 : 32'b0);
+      next_busy_num = busy_num + (issue_to_rs_enable ? 32'b1 : 32'b0) - (max_ready_rs_pos != `FLAG_POS ? 32'b1 : 32'b0);
 
     rs_next_full = (next_busy_num == `RS_SIZE);
   end
@@ -91,31 +91,31 @@ module RS (
       for (i = 0; i < `RS_SIZE; i = i + 1) begin
         busy[i] <= `FALSE;
       end
-      alu_enable <= `FALSE;
+      rs_to_alu_enable <= `FALSE;
     end else if (!rdy) begin
       ;
     end else begin
-      alu_enable <= `FALSE;
-      busy_num   <= next_busy_num;
+      rs_to_alu_enable <= `FALSE;
+      busy_num <= next_busy_num;
       if (max_ready_rs_pos != `FLAG_POS) begin
-        alu_enable             <= `TRUE;
-        alu_openum             <= openum[max_ready_rs_pos];
-        alu_rob_pos            <= rob_pos[max_ready_rs_pos];
-        alu_rs1_val            <= rs1_val[max_ready_rs_pos];
-        alu_rs2_val            <= rs2_val[max_ready_rs_pos];
-        alu_imm                <= imm[max_ready_rs_pos];
-        alu_pc                 <= pc[max_ready_rs_pos];
+        rs_to_alu_enable       <= `TRUE;
+        rs_to_alu_openum       <= openum[max_ready_rs_pos];
+        rs_to_alu_rob_pos      <= rob_pos[max_ready_rs_pos];
+        rs_to_alu_rs1_val      <= rs1_val[max_ready_rs_pos];
+        rs_to_alu_rs2_val      <= rs2_val[max_ready_rs_pos];
+        rs_to_alu_imm          <= imm[max_ready_rs_pos];
+        rs_to_alu_pc           <= pc[max_ready_rs_pos];
         busy[max_ready_rs_pos] <= `FALSE;
       end
 
-      if (alu_result_ready) begin
+      if (alu_to_rs_result_ready) begin
         for (i = 0; i < `RS_SIZE; i = i + 1) begin
-          if (rs1_rob_pos[i] == alu_result_rob_pos) begin
-            rs1_val[i]     <= alu_result_val;
+          if (rs1_rob_pos[i] == alu_to_rs_result_rob_pos) begin
+            rs1_val[i]     <= alu_to_rs_result_val;
             rs1_rob_pos[i] <= 0;
           end
-          if (rs2_rob_pos[i] == alu_result_rob_pos) begin
-            rs2_val[i]     <= alu_result_val;
+          if (rs2_rob_pos[i] == alu_to_rs_result_rob_pos) begin
+            rs2_val[i]     <= alu_to_rs_result_val;
             rs2_rob_pos[i] <= 0;
           end
         end
@@ -134,16 +134,16 @@ module RS (
         end
       end
 
-      if (issue_enable) begin
+      if (issue_to_rs_enable) begin
         busy[min_free_rs_pos]        <= `TRUE;
-        openum[min_free_rs_pos]      <= issue_openum;
-        rob_pos[min_free_rs_pos]     <= issue_rob_pos;
-        rs1_val[min_free_rs_pos]     <= issue_rs1_val;
-        rs1_rob_pos[min_free_rs_pos] <= issue_rs1_rob_pos;
-        rs2_val[min_free_rs_pos]     <= issue_rs2_val;
-        rs2_rob_pos[min_free_rs_pos] <= issue_rs2_rob_pos;
-        imm[min_free_rs_pos]         <= issue_imm;
-        pc[min_free_rs_pos]          <= issue_pc;
+        openum[min_free_rs_pos]      <= issue_to_rs_openum;
+        rob_pos[min_free_rs_pos]     <= issue_to_rs_rob_pos;
+        rs1_val[min_free_rs_pos]     <= issue_to_rs_rs1_val;
+        rs1_rob_pos[min_free_rs_pos] <= issue_to_rs_rs1_rob_pos;
+        rs2_val[min_free_rs_pos]     <= issue_to_rs_rs2_val;
+        rs2_rob_pos[min_free_rs_pos] <= issue_to_rs_rs2_rob_pos;
+        imm[min_free_rs_pos]         <= issue_to_rs_imm;
+        pc[min_free_rs_pos]          <= issue_to_rs_pc;
       end
     end
   end

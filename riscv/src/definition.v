@@ -1,8 +1,8 @@
 //wire status
 `define TRUE 1'b1
 `define FALSE 1'b0
-`define LSB_READ 1'b0
-`define LSB_WRITE 1'b1
+`define MEM_READ 1'b0
+`define MEM_WRITE 1'b1
 
 
 //element type
@@ -39,9 +39,9 @@
 
 //for lsb
 `define LS_TYPE 2:0
-`define BYTE_TYPE 2'b00
-`define HALF_TYPE 2'b01
-`define WORD_TYPE 2'b10
+`define BYTE_TYPE 3'b100
+`define HALF_TYPE 3'b101
+`define WORD_TYPE 3'b111
 
 
 //default value

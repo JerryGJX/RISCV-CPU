@@ -10,20 +10,20 @@ module ALU (
     input wire clr,
 
     //from rs
-    input wire rs_to_alu_enable,
-    input wire [`OPENUM_TYPE] rs_to_alu_openum,
+    input wire                      rs_to_alu_enable,
+    input wire [      `OPENUM_TYPE] rs_to_alu_openum,
     input wire [`ROB_WRAP_POS_TYPE] rs_to_alu_rob_pos,
-    input wire [`DATA_TYPE] rs_to_alu_rs1_val,
-    input wire [`DATA_TYPE] rs_to_alu_rs2_val,
-    input wire [`DATA_TYPE] rs_to_alu_imm,
-    input wire [`ADDR_TYPE] rs_to_alu_pc,
+    input wire [        `DATA_TYPE] rs_to_alu_rs1_val,
+    input wire [        `DATA_TYPE] rs_to_alu_rs2_val,
+    input wire [        `DATA_TYPE] rs_to_alu_imm,
+    input wire [        `ADDR_TYPE] rs_to_alu_pc,
 
     //alu broadcast
-    output reg alu_broadcast_enable,
+    output reg                      alu_broadcast_enable,
     output reg [`ROB_WRAP_POS_TYPE] alu_broadcast_rob_pos,
-    output reg [`DATA_TYPE] alu_broadcast_val,
-    output reg alu_broadcast_jump,
-    output reg [`ADDR_TYPE] alu_broadcast_pc
+    output reg [        `DATA_TYPE] alu_broadcast_val,
+    output reg                      alu_broadcast_jump,
+    output reg [        `ADDR_TYPE] alu_broadcast_pc
 );
 
   reg [`DATA_TYPE] alu_result;

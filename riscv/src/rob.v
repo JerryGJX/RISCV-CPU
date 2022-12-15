@@ -40,9 +40,9 @@ module rob (
     input  wire [        `DATA_TYPE] lsb_to_rob_ld_val,
 
     //rob to if
-    output reg rob_to_if_br_commit_enable,
-    output reg rob_to_if_br_real_jump,
-    output reg rob_to_if_set_pc_enable,
+    output reg              rob_to_if_br_commit_enable,
+    output reg              rob_to_if_br_real_jump,
+    output reg              rob_to_if_set_pc_enable,
     output reg [`ADDR_TYPE] rob_to_if_target_pc,
     //output reg [`ADDR_TYPE] br_pc,
 

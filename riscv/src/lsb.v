@@ -20,7 +20,8 @@ module lsb (
     input wire [        `DATA_TYPE] issue_to_lsb_imm,
 
     //with memCtrl
-    input  wire              mc_to_lsb_ls_done,
+    input  wire              mc_to_lsb_st_done,
+    input  wire              mc_to_lsb_ld_done,
     input  wire [`DATA_TYPE] mc_to_lsb_ld_val,
     output reg               lsb_to_mc_enable,
     output reg               lsb_to_mc_wr,
@@ -34,9 +35,10 @@ module lsb (
 
     //lsb broadcast
     output wire                      lsb_broadcast_next_full,
-    output reg                       lsb_broadcast_result_ready,
-    output reg  [`ROB_WRAP_POS_TYPE] lsb_broadcast_result_rob_pos,
-    output reg  [        `DATA_TYPE] lsb_broadcast_result_val,
+    output reg                       lsb_broadcast_ld_done,
+    // output reg                       lsb_broadcast_st_done,
+    output reg  [`ROB_WRAP_POS_TYPE] lsb_broadcast_ld_rob_pos,
+    output reg  [        `DATA_TYPE] lsb_broadcast_ld_val,
 
     //receive ALU broadcast
     input wire                      alu_result_ready,
@@ -77,7 +79,7 @@ module lsb (
 
   wire [`ADDR_TYPE] head_addr = rs1_val[loop_head] + imm[loop_head];
   wire head_load_type = (openum[loop_head] == `OPENUM_LB) || (openum[loop_head] == `OPENUM_LH) || (openum[loop_head] == `OPENUM_LW) || (openum[loop_head] == `OPENUM_LBU) || (openum[loop_head] == `OPENUM_LHU);
-  wire head_pop = (head_status == STATUS_WAIT) && mc_to_lsb_ls_done;
+  wire head_pop = (head_status == STATUS_WAIT) && (mc_to_lsb_st_done || mc_to_lsb_ld_done);
   wire head_excutable = ele_num != 0 && rs1_rob_pos[loop_head] == 0 && rs2_rob_pos[loop_head] == 0 && ((head_load_type && !clr)|| commit[loop_head]);
 
   always @(*) begin
@@ -113,7 +115,7 @@ module lsb (
     end else if (clr) begin
       loop_tail <= loop_head + commit_ele_num[`LSB_POS_TYPE];
 
-      if (head_status == STATUS_WAIT && mc_to_lsb_ls_done) begin//there will not be a committed load at head pos
+      if (head_pop) begin  //there will not be a committed load at head pos
         busy[loop_head]   <= `FALSE;
         commit[loop_head] <= `FALSE;
         loop_head         <= loop_head + 1;
@@ -140,7 +142,7 @@ module lsb (
       end
     end else begin
       if (head_status == STATUS_WAIT) begin
-        if (mc_to_lsb_ls_done) begin
+        if (mc_to_lsb_ld_done || mc_to_lsb_st_done) begin
           busy[loop_head]   <= `FALSE;
           commit[loop_head] <= `FALSE;
           loop_head         <= loop_head + 1;
@@ -149,16 +151,16 @@ module lsb (
           head_status       <= STATUS_IDLE;
 
           if (head_load_type) begin
-            lsb_broadcast_result_ready   <= `TRUE;
-            lsb_broadcast_result_rob_pos <= rob_pos[loop_head];
+            lsb_broadcast_ld_done        <= `TRUE;
+            lsb_broadcast_ld_rob_pos <= rob_pos[loop_head];
             case (openum[loop_head])
               `OPENUM_LB:
-              lsb_broadcast_result_val <= {{24{mc_to_lsb_ld_val[7]}}, mc_to_lsb_ld_val[7:0]};
-              `OPENUM_LBU: lsb_broadcast_result_val <= {24'b0, mc_to_lsb_ld_val[7:0]};
+              lsb_broadcast_ld_val <= {{24{mc_to_lsb_ld_val[7]}}, mc_to_lsb_ld_val[7:0]};
+              `OPENUM_LBU: lsb_broadcast_ld_val <= {24'b0, mc_to_lsb_ld_val[7:0]};
               `OPENUM_LH:
-              lsb_broadcast_result_val <= {{16{mc_to_lsb_ld_val[15]}}, mc_to_lsb_ld_val[15:0]};
-              `OPENUM_LHU: lsb_broadcast_result_val <= {16'b0, mc_to_lsb_ld_val[15:0]};
-              `OPENUM_LW: lsb_broadcast_result_val <= mc_to_lsb_ld_val;
+              lsb_broadcast_ld_val <= {{16{mc_to_lsb_ld_val[15]}}, mc_to_lsb_ld_val[15:0]};
+              `OPENUM_LHU: lsb_broadcast_ld_val <= {16'b0, mc_to_lsb_ld_val[15:0]};
+              `OPENUM_LW: lsb_broadcast_ld_val <= mc_to_lsb_ld_val;
               default;
             endcase
           end

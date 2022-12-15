@@ -24,9 +24,10 @@ module memCtrl (
     input  wire              lsb_to_mc_enable,
     input  wire              lsb_to_mc_wr,
     input  wire [`ADDR_TYPE] lsb_to_mc_addr,
-    input  wire [  `LS_TYPE] lsb_to_mc_type,
+    input  wire [  `LS_TYPE] lsb_to_mc_ls_type,
     input  wire [`DATA_TYPE] lsb_to_mc_st_val,
-    output reg               mc_to_lsb_done,
+    output reg               mc_to_lsb_ld_done,
+    output reg               mc_to_lsb_st_done,
     output reg  [`DATA_TYPE] mc_to_lsb_ld_val
 
 );
@@ -37,7 +38,7 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
 
   reg last_lsb = `FALSE;
   reg [2:0] ls_step;  //0:idle, 1:wait for first byte and so on
-  wire [2:0] ls_last_step = lsb_to_mc_type;  //use ls type to secure the matching of the last step
+  wire [2:0] ls_last_step = lsb_to_mc_ls_type;  //use ls type to secure the matching of the last step
   reg [2:0] if_step;
   wire [2:0] if_last_step = WAIT_FOR_FOURTH_BYTE;
   reg [`DATA_TYPE] mem_result;
@@ -80,23 +81,25 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
 
   always @(posedge clk) begin
     if (rst || clr) begin
-      if_step        <= IDLE;
-      ls_step        <= IDLE;
-      mc_to_mem_wr   <= `MEM_READ;
+      if_step           <= IDLE;
+      ls_step           <= IDLE;
+      mc_to_mem_wr      <= `MEM_READ;
       //   mc_to_mem_addr <= 0;
-      mc_to_lsb_done <= `FALSE;
-      mc_to_if_done  <= `FALSE;
+      mc_to_lsb_ld_done <= `FALSE;
+      mc_to_lsb_st_done <= `FALSE;
+      mc_to_if_done     <= `FALSE;
     end else if (!rdy) begin
       if_step      <= IDLE;
       ls_step      <= IDLE;
       mc_to_mem_wr <= `MEM_READ;
       //   mc_to_mem_addr <= 0;
     end else begin
-      mc_to_mem_wr     <= 0;
-      mc_to_if_done    <= `FALSE;
-      mc_to_if_result  <= 0;
-      mc_to_lsb_done   <= `FALSE;
-      mc_to_lsb_ld_val <= 0;
+      mc_to_mem_wr      <= 0;
+      mc_to_if_done     <= `FALSE;
+      mc_to_if_result   <= 0;
+      mc_to_lsb_ld_done <= `FALSE;
+      mc_to_lsb_st_done <= `FALSE;
+      mc_to_lsb_ld_val  <= 0;
 
       if (if_step == IDLE && ls_step == IDLE) begin  //mem idle
         if (!clr) begin
@@ -136,13 +139,13 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
               WAIT_FOR_FOURTH_BYTE: ls_step <= IDLE;
               default: ;
             endcase
-          end else begin
+          end else begin  //last step
             ls_step <= IDLE;
             if (lsb_to_mc_wr == `MEM_READ) begin
-              mc_to_lsb_ld_val <= mem_result;
-              mc_to_lsb_done   <= `TRUE;
+              mc_to_lsb_ld_val  <= mem_result;
+              mc_to_lsb_ld_done <= `TRUE;
             end else begin  //store
-              mc_to_lsb_done <= `TRUE;
+              mc_to_lsb_st_done <= `TRUE;
             end
           end
         end

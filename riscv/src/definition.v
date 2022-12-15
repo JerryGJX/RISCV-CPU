@@ -1,3 +1,6 @@
+`ifndef macro_definition
+`define macro_definition
+
 //wire status
 `define TRUE 1'b1
 `define FALSE 1'b0
@@ -170,6 +173,6 @@
 
 
 
-
+`endif
 
 

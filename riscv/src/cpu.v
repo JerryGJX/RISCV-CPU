@@ -1,8 +1,7 @@
 // RISCV32I CPU top module
 // port modification allowed for debugging purposes
 
-`ifndef macro_cpu
-`define macro_cpu
+
 `include "definition.v"
 
 
@@ -14,7 +13,6 @@
 `include "alu.v"
 `include "rob.v"
 `include "regfile.v"
-`include "ram.v"
 
 
 module cpu (
@@ -282,7 +280,7 @@ module cpu (
       .rst                     (rst_in),
       .rdy                     (rdy_in),
       .clr                     (clr),
-      .issue_to_rs_enable      (issue_enable),
+      .issue_to_rs_enable      (dc_with_rs_enable),
       .issue_to_rs_openum      (issue_openum),
       .issue_to_rs_rob_pos     (issue_rob_pos),
       .issue_to_rs_rs1_val     (issue_rs1_val),
@@ -337,7 +335,7 @@ module cpu (
       .rst                     (rst_in),
       .rdy                     (rdy_in),
       .clr                     (clr),
-      .issue_to_lsb_enable     (issue_enable),
+      .issue_to_lsb_enable     (dc_with_lsb_enable),
       .issue_to_lsb_openum     (issue_openum),
       .issue_to_lsb_rob_pos    (issue_rob_pos),
       .issue_to_lsb_rs1_val    (issue_rs1_val),
@@ -407,5 +405,5 @@ module cpu (
       .rob_to_dc_rs2_val          (dc_with_rob_rs2_val),
       .rob_to_dc_next_rob_pos     (dc_with_rob_next_rob_pos)
   );
+
 endmodule
-`endif

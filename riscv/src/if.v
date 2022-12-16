@@ -1,4 +1,4 @@
-`ifndef mqacro_if
+`ifndef macro_if
 `define macro_if
 `include "definition.v"
 
@@ -45,14 +45,15 @@ module iFetch (
 
   //direct mapping iCache
   `define ICACHE_SIZE 256
-  `define INDEX_RANGE 9:2
-  `define TAG_RANGE 31:10
+  `define INDEX_RANGE 7:0
+  `define TAG_RANGE 31:8
 
   reg [`ICACHE_SIZE - 1:0] valid;  //bitset
   reg [`TAG_RANGE] tag_store[`ICACHE_SIZE - 1:0];
+
   reg [`INST_TYPE] inst_store[`ICACHE_SIZE - 1:0];
 
-  wire hit = valid[pc[`INDEX_RANGE]] && (tag_store[pc[`INDEX_RANGE]] == pc[`TAG_RANGE]);
+  wire hit = valid[pc[`INDEX_RANGE]] == `TRUE && (tag_store[pc[`INDEX_RANGE]] == pc[`TAG_RANGE]);
 
   wire [`INST_TYPE] hit_inst_val = (hit) ? inst_store[pc[`INDEX_RANGE]] : `BLANK_INST;
 
@@ -302,6 +303,7 @@ module iFetch (
       if_to_mc_enable <= `FALSE;
       status          <= STATUS_IDLE;
       if_to_dc_enable <= `FALSE;
+      if_to_dc_openum <= `OPENUM_NOP;
       valid           <= 0;
     end else if (!rdy) begin
       ;
@@ -321,6 +323,10 @@ module iFetch (
           if_to_dc_pred_jump  <= pred_jump;
         end else begin
           if_to_dc_enable <= `FALSE;
+          if_to_dc_openum <= `OPENUM_NOP;
+          if_to_dc_inst_val <= `BLANK_INST;
+          if_to_dc_lsb_enable <= 0;
+          if_to_dc_rs_enable <= 0;
         end
       end
 
@@ -332,11 +338,11 @@ module iFetch (
         end
       end else begin
         if (mc_to_if_done) begin
-          valid[pc[`INDEX_RANGE]]      <= `TRUE;
-          tag_store[pc[`INDEX_RANGE]]  <= pc[`TAG_RANGE];
-          inst_store[pc[`INDEX_RANGE]] <= mc_to_if_result;
-          if_to_mc_enable              <= `FALSE;
-          status                       <= STATUS_IDLE;
+          valid[if_to_mc_pc[`INDEX_RANGE]]      <= `TRUE;
+          tag_store[if_to_mc_pc[`INDEX_RANGE]]  <= if_to_mc_pc[`TAG_RANGE];
+          inst_store[if_to_mc_pc[`INDEX_RANGE]] <= mc_to_if_result;
+          if_to_mc_enable                       <= `FALSE;
+          status                                <= STATUS_IDLE;
         end
       end
     end

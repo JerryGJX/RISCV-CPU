@@ -145,13 +145,16 @@ module lsb (
         if (mc_to_lsb_ld_done || mc_to_lsb_st_done) begin
           busy[loop_head]   <= `FALSE;
           commit[loop_head] <= `FALSE;
+          lsb_to_mc_enable  <= `FALSE;
+          lsb_to_mc_addr    <= 0;
+          lsb_to_mc_st_val  <= 0;
           loop_head         <= loop_head + 1;
           ele_num           <= ele_num - 1;
           commit_ele_num    <= commit_ele_num - 1;
           head_status       <= STATUS_IDLE;
 
           if (head_load_type) begin
-            lsb_broadcast_ld_done        <= `TRUE;
+            lsb_broadcast_ld_done    <= `TRUE;
             lsb_broadcast_ld_rob_pos <= rob_pos[loop_head];
             case (openum[loop_head])
               `OPENUM_LB:
@@ -171,9 +174,9 @@ module lsb (
           lsb_to_mc_enable <= `TRUE;
           lsb_to_mc_addr   <= head_addr;
           case (openum[loop_head])
-            `OPENUM_SB, `OPENUM_LB, `OPENUM_LBU: lsb_to_mc_ls_type <= 3'd1;
-            `OPENUM_SH, `OPENUM_LH, `OPENUM_LHU: lsb_to_mc_ls_type <= 3'd2;
-            `OPENUM_SW, `OPENUM_LW:              lsb_to_mc_ls_type <= 3'd4;
+            `OPENUM_SB, `OPENUM_LB, `OPENUM_LBU: lsb_to_mc_ls_type <= `BYTE_TYPE;
+            `OPENUM_SH, `OPENUM_LH, `OPENUM_LHU: lsb_to_mc_ls_type <= `HALF_TYPE;
+            `OPENUM_SW, `OPENUM_LW:              lsb_to_mc_ls_type <= `WORD_TYPE;
             default;
           endcase
 

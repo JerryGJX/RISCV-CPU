@@ -60,7 +60,7 @@ module RS (
   reg [         `NUM_TYPE] min_free_rs_pos;
 
   reg [         `NUM_TYPE] next_busy_num;
-  ;  //31:0
+//31:0
 
   integer i;
   `define FLAG_POS 32'd16

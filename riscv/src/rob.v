@@ -97,22 +97,24 @@ module rob (
   assign rob_to_dc_rs2_ready = ready[dc_to_rob_rs2_pos[`ROB_POS_TYPE]];
   assign rob_to_dc_rs1_val = val[dc_to_rob_rs1_pos[`ROB_POS_TYPE]];
   assign rob_to_dc_rs2_val = val[dc_to_rob_rs2_pos[`ROB_POS_TYPE]];
+  assign rob_to_dc_next_rob_pos = {1'b1, loop_tail};
 
   always @(*) begin
     commit_enable = (ele_num > 0) && (ready[loop_head] == `TRUE);
     if (rst || clr) next_num = 32'b0;
     else
-      next_num = ele_num + (issue_to_rob_ready ? 32'b1 : 32'b0) - (commit_enable ? 32'b1 : 32'b0);
+      next_num = ele_num + (issue_to_rob_enable ? 32'b1 : 32'b0) - (commit_enable ? 32'b1 : 32'b0);
   end
 
   always @(posedge clk) begin
     if (rst || clr) begin
-      loop_head              <= 0;
-      loop_tail              <= 0;
-      ele_num                <= 0;
-      rob_to_dc_next_rob_pos <= 0;
-      clr                    <= 0;
-      rob_to_if_target_pc    <= 0;
+      loop_head               <= 0;
+      loop_tail               <= 0;
+      ele_num                 <= 0;
+      // rob_to_dc_next_rob_pos <= 0;
+      clr                     <= 0;
+      rob_to_if_set_pc_enable <= 0;
+      rob_to_if_target_pc     <= 0;
       for (integer i = 0; i < `ROB_SIZE; i += 1) begin
         ready[i]     <= 0;
         rd[i]        <= 0;
@@ -124,9 +126,9 @@ module rob (
         real_jump[i] <= 0;
         dest_pc[i]   <= 0;
       end
-      rob_to_reg_enable   <= 0;
+      rob_to_reg_enable           <= 0;
       rob_to_lsb_st_commit_enable <= 0;
-      rob_to_if_br_commit_enable    <= 0;
+      rob_to_if_br_commit_enable  <= 0;
     end else if (!rdy) begin
       ;
     end else begin

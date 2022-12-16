@@ -1,4 +1,7 @@
-`include "riscv/src/definition.v"
+`ifndef macro_decoder
+`define macro_decoder 
+
+`include "definition.v"
 
 module decoder (
     input wire clk,
@@ -34,21 +37,21 @@ module decoder (
     output reg [`ROB_WRAP_POS_TYPE] issue_rob_pos,
 
     //with regfile
-    output reg [     `REG_POS_TYPE] dc_to_reg_rs1_reg_pos,
-    output reg [     `REG_POS_TYPE] dc_to_reg_rs2_reg_pos,
-    input  reg [        `DATA_TYPE] reg_to_dc_rs1_val,
-    input  reg [`ROB_WRAP_POS_TYPE] reg_to_dc_rs1_rob_pos,
-    input  reg [        `DATA_TYPE] reg_to_dc_rs2_val,
-    input  reg [`ROB_WRAP_POS_TYPE] reg_to_dc_rs2_rob_pos,
+    output wire [     `REG_POS_TYPE] dc_to_reg_rs1_reg_pos,
+    output wire [     `REG_POS_TYPE] dc_to_reg_rs2_reg_pos,
+    input  wire [        `DATA_TYPE] reg_to_dc_rs1_val,
+    input  wire [`ROB_WRAP_POS_TYPE] reg_to_dc_rs1_rob_pos,
+    input  wire [        `DATA_TYPE] reg_to_dc_rs2_val,
+    input  wire [`ROB_WRAP_POS_TYPE] reg_to_dc_rs2_rob_pos,
 
     //with rob
-    output reg [`ROB_WRAP_POS_TYPE] dc_to_rob_rs1_pos,
-    input  reg                      rob_to_dc_rs1_ready,
-    input  reg [        `DATA_TYPE] rob_to_dc_rs1_val,
-    output reg [`ROB_WRAP_POS_TYPE] dc_to_rob_rs2_pos,
-    input  reg                      rob_to_dc_rs2_ready,
-    input  reg [        `DATA_TYPE] rob_to_dc_rs2_val,
-    input  reg [`ROB_WRAP_POS_TYPE] rob_to_dc_next_rob_pos,
+    output wire [`ROB_WRAP_POS_TYPE] dc_to_rob_rs1_pos,
+    input  wire                      rob_to_dc_rs1_ready,
+    input  wire [        `DATA_TYPE] rob_to_dc_rs1_val,
+    output wire [`ROB_WRAP_POS_TYPE] dc_to_rob_rs2_pos,
+    input  wire                      rob_to_dc_rs2_ready,
+    input  wire [        `DATA_TYPE] rob_to_dc_rs2_val,
+    input  wire [`ROB_WRAP_POS_TYPE] rob_to_dc_next_rob_pos,
 
     //with alu
     input wire                      alu_result_ready,
@@ -56,7 +59,7 @@ module decoder (
     input wire [        `DATA_TYPE] alu_result_val,
 
     //with lsb
-    input wire                      lsb_load_result_ready,//this will be true 
+    input wire                      lsb_load_result_ready,    //this will be true 
     input wire [`ROB_WRAP_POS_TYPE] lsb_load_result_rob_pos,
     input wire [        `DATA_TYPE] lsb_load_result_val,
 
@@ -203,3 +206,4 @@ module decoder (
 
 
 endmodule
+`endif

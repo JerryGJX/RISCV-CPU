@@ -159,6 +159,16 @@ module rob (
       rob_to_if_br_commit_enable <= `FALSE;
 
       if (commit_enable) begin
+`ifdef DEBUG
+        $fdisplay(logfile, "Commit ROB #%X (%d) ", loop_head, commit_cnt);
+        commit_cnt++;
+        $fdisplay(logfile, "  pc:%X, rd:%X, val:%X, jump:%b, respc:%X, rollback:%b", pc[loop_head],
+                  rd[loop_head], val[loop_head], real_jump[loop_head], dest_pc[loop_head],
+                  pred_jump[loop_head] != real_jump[loop_head]);
+`endif
+
+
+
         commit_rob_pos <= {1'b1, loop_head};
         if (head_is_store) begin
           rob_to_lsb_st_commit_enable <= `TRUE;
@@ -189,5 +199,17 @@ module rob (
       end
     end
   end
+
+`ifdef DEBUG
+  integer logfile;
+  integer commit_cnt;
+  initial begin
+    logfile = $fopen("rob.log","w");
+    commit_cnt = 0;
+  end
+`endif
+
+
+
 endmodule
 `endif

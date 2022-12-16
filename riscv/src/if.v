@@ -85,19 +85,19 @@ module iFetch (
     pred_pc   = pc + 4;
     pred_jump = `FALSE;
 
-    case (hit_inst_val[`OPCODE_RANGE])
-      `OPCODE_JAL: begin
-        pred_pc = pc + {{12{hit_inst_val[31]}}, hit_inst_val[19:12], hit_inst_val[20], hit_inst_val[30:21], 1'b0};
-        pred_jump = `TRUE;
-      end
-      `OPCODE_BR: begin
-        if (jump_record >= 2) begin
-          pred_pc = pc + {{20{hit_inst_val[31]}}, hit_inst_val[7], hit_inst_val[30:25], hit_inst_val[11:8], 1'b0};
-          pred_jump = `TRUE;
-        end
-      end
-      default;
-    endcase
+    // case (hit_inst_val[`OPCODE_RANGE])
+    //   `OPCODE_JAL: begin
+    //     pred_pc = pc + {{12{hit_inst_val[31]}}, hit_inst_val[19:12], hit_inst_val[20], hit_inst_val[30:21], 1'b0};
+    //     pred_jump = `TRUE;
+    //   end
+    //   `OPCODE_BR: begin
+    //     if (jump_record >= 2) begin
+    //       pred_pc = pc + {{20{hit_inst_val[31]}}, hit_inst_val[7], hit_inst_val[30:25], hit_inst_val[11:8], 1'b0};
+    //       pred_jump = `TRUE;
+    //     end
+    //   end
+    //   default;
+    // endcase
   end
 
 

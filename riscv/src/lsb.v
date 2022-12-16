@@ -1,6 +1,8 @@
 `ifndef macro_lsb
 `define macro_lsb
 
+`define DEBUG
+
 `include "definition.v"
 
 module lsb (
@@ -115,13 +117,16 @@ module lsb (
     end else if (clr) begin
       loop_tail <= loop_head + commit_ele_num[`LSB_POS_TYPE];
 
-      if (head_pop) begin  //there will not be a committed load at head pos
+      if (head_status == STATUS_WAIT && mc_to_lsb_st_done) begin  //there will not be a committed load at head pos
         busy[loop_head]   <= `FALSE;
         commit[loop_head] <= `FALSE;
         loop_head         <= loop_head + 1;
+
         ele_num           <= commit_ele_num - 1;
         commit_ele_num    <= commit_ele_num - 1;
+
         head_status       <= STATUS_IDLE;
+        lsb_to_mc_enable  <= `FALSE;
       end else begin
         ele_num        <= commit_ele_num;
         commit_ele_num <= commit_ele_num;
@@ -150,8 +155,11 @@ module lsb (
           lsb_to_mc_st_val  <= 0;
           loop_head         <= loop_head + 1;
           ele_num           <= ele_num - 1;
-          commit_ele_num    <= commit_ele_num - 1;
-          head_status       <= STATUS_IDLE;
+
+          if (mc_to_lsb_st_done) begin
+            commit_ele_num <= commit_ele_num - 1;
+          end
+          head_status <= STATUS_IDLE;
 
           if (head_load_type) begin
             lsb_broadcast_ld_done    <= `TRUE;
@@ -171,6 +179,16 @@ module lsb (
       end else begin
         lsb_to_mc_enable <= `FALSE;
         if (head_excutable) begin
+`ifdef DEBUG
+          // $fdisplay(logfile, "will Exec %s @%t", head_load_type ? "L" : "S", $realtime);
+          // $fdisplay(logfile, "  addr:%X, w:%X, rob_pos:%X", head_addr, rs2_val[loop_head],
+          //           rob_pos[loop_head]);
+
+          $fdisplay(logfile, "will Exec %s", head_load_type ? "L" : "S");
+          $fdisplay(logfile, "  addr:%X, w:%X, rob_pos:%X", head_addr, rs2_val[loop_head],
+                    (rob_pos[loop_head][`ROB_POS_TYPE]));
+`endif
+
           lsb_to_mc_enable <= `TRUE;
           lsb_to_mc_addr   <= head_addr;
           case (openum[loop_head])
@@ -202,6 +220,10 @@ module lsb (
         commit[loop_tail]      <= `FALSE;
         loop_tail              <= loop_tail + 1;
         ele_num                <= ele_num + 1;
+
+
+
+
       end
 
 
@@ -249,6 +271,16 @@ module lsb (
 
     end
   end
+
+
+
+`ifdef DEBUG
+  integer logfile;
+  initial begin
+    logfile = $fopen("lsb.log", "w");
+  end
+`endif
+
 
 
 endmodule

@@ -99,6 +99,10 @@ module rob (
   assign rob_to_dc_rs2_val = val[dc_to_rob_rs2_pos[`ROB_POS_TYPE]];
   assign rob_to_dc_next_rob_pos = {1'b1, loop_tail};
 
+
+  wire[`ADDR_TYPE] head_pc = pc[loop_head];
+
+
   always @(*) begin
     commit_enable = (ele_num > 0) && (ready[loop_head] == `TRUE);
     if (rst || clr) next_num = 32'b0;
@@ -148,15 +152,15 @@ module rob (
       end
 
       if (alu_to_rob_result_ready) begin
-        ready[alu_to_rob_result_rob_pos[`ROB_POS_TYPE]] <= `TRUE;
-        val[alu_to_rob_result_rob_pos[`ROB_POS_TYPE]] <= alu_to_rob_result_val;
+        ready[alu_to_rob_result_rob_pos[`ROB_POS_TYPE]]     <= `TRUE;
+        val[alu_to_rob_result_rob_pos[`ROB_POS_TYPE]]       <= alu_to_rob_result_val;
         real_jump[alu_to_rob_result_rob_pos[`ROB_POS_TYPE]] <= alu_to_rob_result_jump;
-        dest_pc[alu_to_rob_result_rob_pos[`ROB_POS_TYPE]] <= alu_to_rob_result_pc;
+        dest_pc[alu_to_rob_result_rob_pos[`ROB_POS_TYPE]]   <= alu_to_rob_result_pc;
       end
 
-      rob_to_reg_enable <= `FALSE;
+      rob_to_reg_enable           <= `FALSE;
       rob_to_lsb_st_commit_enable <= `FALSE;
-      rob_to_if_br_commit_enable <= `FALSE;
+      rob_to_if_br_commit_enable  <= `FALSE;
 
       if (commit_enable) begin
 `ifdef DEBUG
@@ -204,7 +208,7 @@ module rob (
   integer logfile;
   integer commit_cnt;
   initial begin
-    logfile = $fopen("rob.log","w");
+    logfile = $fopen("rob.log", "w");
     commit_cnt = 0;
   end
 `endif

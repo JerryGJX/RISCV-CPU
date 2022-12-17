@@ -95,6 +95,7 @@ module lsb (
   integer i;
 
   always @(posedge clk) begin
+
     if (rst || (clr && commit_ele_num == 0)) begin
       ele_num <= 0;
       commit_ele_num <= 0;
@@ -146,6 +147,8 @@ module lsb (
         end
       end
     end else begin
+      lsb_broadcast_ld_done <= `FALSE;
+
       if (head_status == STATUS_WAIT) begin
         if (mc_to_lsb_ld_done || mc_to_lsb_st_done) begin
           busy[loop_head]   <= `FALSE;

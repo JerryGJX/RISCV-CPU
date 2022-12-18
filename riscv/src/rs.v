@@ -43,24 +43,41 @@ module RS (
 
 );
 
-  reg                      busy             [`RS_SIZE - 1:0];
-  reg [      `OPENUM_TYPE] openum           [`RS_SIZE - 1:0];
-  reg [`ROB_WRAP_POS_TYPE] rob_pos          [`RS_SIZE - 1:0];
-  reg [        `DATA_TYPE] rs1_val          [`RS_SIZE - 1:0];
-  reg [`ROB_WRAP_POS_TYPE] rs1_rob_pos      [`RS_SIZE - 1:0];
-  reg [        `DATA_TYPE] rs2_val          [`RS_SIZE - 1:0];
-  reg [`ROB_WRAP_POS_TYPE] rs2_rob_pos      [`RS_SIZE - 1:0];
-  reg [        `DATA_TYPE] imm              [`RS_SIZE - 1:0];
-  reg [        `ADDR_TYPE] pc               [`RS_SIZE - 1:0];
-  reg                      ready            [`RS_SIZE - 1:0];
+  reg busy[`RS_SIZE - 1:0];
+  reg [`OPENUM_TYPE] openum[`RS_SIZE - 1:0];
+  reg [`ROB_WRAP_POS_TYPE] rob_pos[`RS_SIZE - 1:0];
+  reg [`DATA_TYPE] rs1_val[`RS_SIZE - 1:0];
+  reg [`ROB_WRAP_POS_TYPE] rs1_rob_pos[`RS_SIZE - 1:0];
+  reg [`DATA_TYPE] rs2_val[`RS_SIZE - 1:0];
+  reg [`ROB_WRAP_POS_TYPE] rs2_rob_pos[`RS_SIZE - 1:0];
+  reg [`DATA_TYPE] imm[`RS_SIZE - 1:0];
+  reg [`ADDR_TYPE] pc[`RS_SIZE - 1:0];
+  reg ready[`RS_SIZE - 1:0];
 
 
-  reg [         `NUM_TYPE] busy_num;  //31:0
-  reg [         `NUM_TYPE] max_ready_rs_pos;
-  reg [         `NUM_TYPE] min_free_rs_pos;
 
-  reg [         `NUM_TYPE] next_busy_num;
-//31:0
+
+  wire busy4 = busy[0];
+  wire [`OPENUM_TYPE] openum4 = openum[0];
+  wire [`ROB_WRAP_POS_TYPE] rob_pos4 = rob_pos[0];
+  wire [`DATA_TYPE] rs1_val4 = rs1_val[0];
+  wire [`ROB_WRAP_POS_TYPE] rs1_rob_pos4 = rs1_rob_pos[0];
+  wire [`DATA_TYPE] rs2_val4 = rs2_val[0];
+  wire [`ROB_WRAP_POS_TYPE] rs2_rob_pos4 = rs2_rob_pos[0];
+  wire [`DATA_TYPE] imm4 = imm[0];
+  wire [`ADDR_TYPE] pc4 = pc[0];
+  wire ready4 = ready[0];
+
+
+
+
+
+  reg [`NUM_TYPE] busy_num;  //31:0
+  reg [`NUM_TYPE] max_ready_rs_pos;
+  reg [`NUM_TYPE] min_free_rs_pos;
+
+  reg [`NUM_TYPE] next_busy_num;
+  //31:0
 
   integer i;
   `define FLAG_POS 32'd16
@@ -110,11 +127,11 @@ module RS (
 
       if (alu_to_rs_result_ready) begin
         for (i = 0; i < `RS_SIZE; i = i + 1) begin
-          if (rs1_rob_pos[i] == alu_to_rs_result_rob_pos) begin
+          if (rs1_rob_pos[i] != 0 && rs1_rob_pos[i] == alu_to_rs_result_rob_pos) begin
             rs1_val[i]     <= alu_to_rs_result_val;
             rs1_rob_pos[i] <= 0;
           end
-          if (rs2_rob_pos[i] == alu_to_rs_result_rob_pos) begin
+          if (rs2_rob_pos[i] != 0 && rs2_rob_pos[i] == alu_to_rs_result_rob_pos) begin
             rs2_val[i]     <= alu_to_rs_result_val;
             rs2_rob_pos[i] <= 0;
           end
@@ -123,11 +140,11 @@ module RS (
 
       if (lsb_load_result_ready) begin
         for (i = 0; i < `RS_SIZE; i = i + 1) begin
-          if (rs1_rob_pos[i] == lsb_load_result_rob_pos) begin
+          if (rs1_rob_pos[i] != 0 && rs1_rob_pos[i] == lsb_load_result_rob_pos) begin
             rs1_val[i]     <= lsb_load_result_val;
             rs1_rob_pos[i] <= 0;
           end
-          if (rs2_rob_pos[i] == lsb_load_result_rob_pos) begin
+          if (rs2_rob_pos[i] != 0 && rs2_rob_pos[i] == lsb_load_result_rob_pos) begin
             rs2_val[i]     <= lsb_load_result_val;
             rs2_rob_pos[i] <= 0;
           end

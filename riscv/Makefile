@@ -28,7 +28,7 @@ build_sim_test: _no_testcase_name_check
 	@$(riscv_bin)/riscv32-unknown-elf-objdump -D $(testspace)/test.om > $(testspace)/test.dump
 
 run_sim:
-	@cd $(testspace) && ./test
+	@cd $(testspace) && ./test > test.out
 
 clear:
 	@rm $(sys)/rom.o $(testspace)/test*

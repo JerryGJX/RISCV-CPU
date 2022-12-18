@@ -79,19 +79,6 @@ module ALU (
     end else if (!rdy) begin
       ;
     end else begin
-
-
-
-
-
-
-
-
-
-
-
-
-      
       alu_broadcast_enable <= rs_to_alu_enable;
       if (rs_to_alu_enable) begin
         alu_broadcast_rob_pos <= rs_to_alu_rob_pos;

@@ -100,17 +100,20 @@ module rob (
   assign rob_to_dc_next_rob_pos = {1'b1, loop_tail};
 
 
-  wire[`ADDR_TYPE] head_pc = pc[loop_head];
+  wire [`ADDR_TYPE] head_pc = pc[loop_head];
 
 
   always @(*) begin
-    commit_enable = (ele_num > 0) && (ready[loop_head] == `TRUE);
+    commit_enable = (!clr) && (ele_num > 0) && (ready[loop_head] == `TRUE);
     if (rst || clr) next_num = 32'b0;
     else
       next_num = ele_num + (issue_to_rob_enable ? 32'b1 : 32'b0) - (commit_enable ? 32'b1 : 32'b0);
   end
 
   always @(posedge clk) begin
+    commit_rob_pos <= 0;
+
+
     if (rst || clr) begin
       loop_head               <= 0;
       loop_tail               <= 0;
@@ -164,11 +167,13 @@ module rob (
 
       if (commit_enable) begin
 `ifdef DEBUG
-        $fdisplay(logfile, "Commit ROB #%X (%d) ", loop_head, commit_cnt);
+        $fdisplay(logfile, "Commit ROB #%X (%d) @%t", loop_head, commit_cnt, $realtime);
         commit_cnt++;
         $fdisplay(logfile, "  pc:%X, rd:%X, val:%X, jump:%b, respc:%X, rollback:%b", pc[loop_head],
                   rd[loop_head], val[loop_head], real_jump[loop_head], dest_pc[loop_head],
                   pred_jump[loop_head] != real_jump[loop_head]);
+
+        $fdisplay(logfile, "rob_pos:%X", loop_head);
 `endif
 
 

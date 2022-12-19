@@ -67,30 +67,14 @@ module lsb (
 
   parameter STATUS_IDLE = 0, STATUS_WAIT = 1;
 
+  reg [`LSB_POS_TYPE] loop_head;
+  reg [`LSB_POS_TYPE] loop_tail;
+  reg [    `NUM_TYPE] ele_num;
+  reg [    `NUM_TYPE] next_ele_num;
+  reg [    `NUM_TYPE] commit_ele_num;
+  reg [    `NUM_TYPE] next_commit_ele_num;
 
-
-  wire busy9 = busy[9];
-  wire                      [      `OPENUM_TYPE] openum9 = openum[9];
-  wire                      [`ROB_WRAP_POS_TYPE] rob_pos9 = rob_pos[9];
-  wire                      [        `DATA_TYPE] rs1_val9 = rs1_val[9];
-  wire                      [`ROB_WRAP_POS_TYPE] rs1_rob_pos9 = rs1_rob_pos[9];
-  wire                      [        `DATA_TYPE] rs2_val9 = rs2_val[9];
-  wire                      [`ROB_WRAP_POS_TYPE] rs2_rob_pos9 = rs2_rob_pos[9];
-  wire                      [        `DATA_TYPE] imm9 = imm[9];
-  wire commit9 = commit[9];
-
-
-
-
-
-  reg                       [     `LSB_POS_TYPE]                                loop_head;
-  reg                       [     `LSB_POS_TYPE]                                loop_tail;
-  reg                       [         `NUM_TYPE]                                ele_num;
-  reg                       [         `NUM_TYPE]                                next_ele_num;
-  reg                       [         `NUM_TYPE]                                commit_ele_num;
-  reg                       [         `NUM_TYPE]                                next_commit_ele_num;
-
-  reg                       [      `STATUS_TYPE]                                head_status;
+  reg [ `STATUS_TYPE] head_status;
 
   assign lsb_broadcast_next_full = (next_ele_num == `LSB_SIZE);
 
@@ -116,13 +100,6 @@ module lsb (
   integer i;
 
   always @(posedge clk) begin
-
-    // lsb_to_mc_enable  <= 0;
-    // lsb_to_mc_wr      <= `MEM_READ;
-    // lsb_to_mc_ls_type <= `BYTE_TYPE;
-    // lsb_to_mc_addr    <= 0;
-    // lsb_to_mc_st_val  <= 0;
-
 
     if (rst || (clr && commit_ele_num == 0)) begin
       ele_num           <= 0;
@@ -216,11 +193,6 @@ module lsb (
           lsb_to_mc_st_val  <= 0;
           loop_head         <= loop_head + 1;
           ele_num           <= next_ele_num;
-
-
-          // if (mc_to_lsb_st_done) begin
-          //   commit_ele_num <= commit_ele_num - 1;
-          // end
           head_status       <= STATUS_IDLE;
 
           if (head_load_type) begin
@@ -246,10 +218,6 @@ module lsb (
         lsb_to_mc_st_val  <= 0;
         if (head_excutable) begin
 `ifdef DEBUG
-          // $fdisplay(logfile, "will Exec %s @%t", head_load_type ? "L" : "S", $realtime);
-          // $fdisplay(logfile, "  addr:%X, w:%X, rob_pos:%X", head_addr, rs2_val[loop_head],
-          //           rob_pos[loop_head]);
-
           $fdisplay(logfile, "will Exec %s", head_load_type ? "L" : "S");
           $fdisplay(logfile, "  addr:%X, w:%X, rob_pos:%X", head_addr, rs2_val[loop_head],
                     (rob_pos[loop_head][`ROB_POS_TYPE]));

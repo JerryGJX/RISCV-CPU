@@ -141,9 +141,6 @@ module rob (
         real_jump[i] <= 0;
         dest_pc[i]   <= 0;
       end
-      // rob_to_reg_enable           <= 0;
-      // rob_to_lsb_st_commit_enable <= 0;
-      // rob_to_if_br_commit_enable  <= 0;
     end else if (!rdy) begin
       ;
     end else begin
@@ -180,14 +177,6 @@ module rob (
         $fdisplay(logfile, "  pc:%X, rd:%X, val:%X, jump:%b, respc:%X, rollback:%b", pc[loop_head],
                   rd[loop_head], val[loop_head], real_jump[loop_head], dest_pc[loop_head],
                   pred_jump[loop_head] != real_jump[loop_head]);
-
-        // $fdisplay(logfile, "rob_pos:%X", loop_head);
-`endif
-
-
-`ifdef DEBUG
-        // $fdisplay(logfile, "Commit ROB #%X  ", loop_head );
-        // $fdisplay(logfile, "  pc:%X", pc[loop_head]);
 
         // $fdisplay(logfile, "rob_pos:%X", loop_head);
 `endif

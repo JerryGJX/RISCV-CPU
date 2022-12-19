@@ -109,9 +109,6 @@ module iFetch (
     local_lsb_dispatch_enable = `FALSE;
     local_issue_enable        = `FALSE;
 
-    // local_inst_rd             = hit_inst_val[`RD_RANGE];
-    // local_inst_rs1            = hit_inst_val[`RS1_RANGE];
-    // local_inst_rs2            = hit_inst_val[`RS2_RANGE];
 
     case (hit_inst_val[`OPCODE_RANGE])
       `OPCODE_RC: begin

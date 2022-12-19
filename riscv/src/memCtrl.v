@@ -149,21 +149,6 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
           end else if (chose_ls) begin
             ls_step <= WAIT_FOR_FIRST_BYTE;
           end
-
-          // if (if_to_mc_enable && !lsb_to_mc_enable) begin
-
-          // end else if (!if_to_mc_enable && lsb_to_mc_enable) begin
-          //   ls_step      <= WAIT_FOR_FIRST_BYTE;
-          //   mc_to_mem_wr <= lsb_to_mc_wr;
-          // end else begin
-          //   if (last_lsb) begin
-          //     if_step      <= WAIT_FOR_FIRST_BYTE;
-          //     mc_to_mem_wr <= `MEM_READ;
-          //   end else begin
-          //     ls_step      <= WAIT_FOR_FIRST_BYTE;
-          //     mc_to_mem_wr <= lsb_to_mc_wr;
-          //   end
-          // end
         end
       end else if (if_step == GEP) begin
         if_step <= IDLE;
@@ -214,11 +199,5 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
       end
     end
   end
-
-
-
-
-
-
 endmodule
 `endif

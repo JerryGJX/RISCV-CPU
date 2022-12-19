@@ -1,6 +1,6 @@
 #!/bin/sh
 # build testcase
-./build_test.sh $@
+CFLAGS=-DSIM ./build_test.sh $@
 # copy test input
 if [ -f ./testcase/$@.in ]; then cp ./testcase/$@.in ./test/test.in; fi
 # copy test output

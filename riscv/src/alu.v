@@ -42,18 +42,18 @@ module ALU (
       `OPENUM_XOR: alu_result = rs_to_alu_rs1_val ^ rs_to_alu_rs2_val;
       `OPENUM_OR: alu_result = rs_to_alu_rs1_val | rs_to_alu_rs2_val;
       `OPENUM_AND: alu_result = rs_to_alu_rs1_val & rs_to_alu_rs2_val;
-      `OPENUM_SLL: alu_result = rs_to_alu_rs1_val << rs_to_alu_rs2_val;
-      `OPENUM_SRL: alu_result = rs_to_alu_rs1_val >> rs_to_alu_rs2_val;
-      `OPENUM_SRA: alu_result = $signed(rs_to_alu_rs1_val) >> rs_to_alu_rs2_val;  //check >>>
+      `OPENUM_SLL: alu_result = rs_to_alu_rs1_val << rs_to_alu_rs2_val[5:0];
+      `OPENUM_SRL: alu_result = rs_to_alu_rs1_val >> rs_to_alu_rs2_val[5:0];
+      `OPENUM_SRA: alu_result = $signed(rs_to_alu_rs1_val) >> rs_to_alu_rs2_val[5:0];  //check >>>
       `OPENUM_SLT: alu_result = ($signed(rs_to_alu_rs1_val) < $signed(rs_to_alu_rs2_val)) ? 1 : 0;
       `OPENUM_SLTU: alu_result = (rs_to_alu_rs1_val < rs_to_alu_rs2_val) ? 1 : 0;
       `OPENUM_ADDI: alu_result = rs_to_alu_rs1_val + rs_to_alu_imm;
       `OPENUM_XORI: alu_result = rs_to_alu_rs1_val ^ rs_to_alu_imm;
       `OPENUM_ORI: alu_result = rs_to_alu_rs1_val | rs_to_alu_imm;
       `OPENUM_ANDI: alu_result = rs_to_alu_rs1_val & rs_to_alu_imm;
-      `OPENUM_SLLI: alu_result = rs_to_alu_rs1_val << rs_to_alu_imm;
-      `OPENUM_SRLI: alu_result = rs_to_alu_rs1_val >> rs_to_alu_imm;
-      `OPENUM_SRAI: alu_result = $signed(rs_to_alu_rs1_val) >> rs_to_alu_imm;  //check >>>
+      `OPENUM_SLLI: alu_result = rs_to_alu_rs1_val << rs_to_alu_imm[5:0];
+      `OPENUM_SRLI: alu_result = rs_to_alu_rs1_val >> rs_to_alu_imm[5:0];
+      `OPENUM_SRAI: alu_result = $signed(rs_to_alu_rs1_val) >> rs_to_alu_imm[5:0];  //check >>>
       `OPENUM_SLTI: alu_result = ($signed(rs_to_alu_rs1_val) < $signed(rs_to_alu_imm)) ? 1 : 0;
       `OPENUM_SLTIU: alu_result = (rs_to_alu_rs1_val < rs_to_alu_imm) ? 1 : 0;
 

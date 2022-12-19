@@ -100,7 +100,11 @@ module rob (
   assign rob_to_dc_next_rob_pos = {1'b1, loop_tail};
 
 
-  wire [`ADDR_TYPE] head_pc = pc[loop_head];
+  wire [  `ADDR_TYPE] head_pc = pc[loop_head];
+  //fuck
+  wire [`OPENUM_TYPE] head_openum = opEnum[loop_head];
+
+
 
 
   always @(*) begin
@@ -111,8 +115,12 @@ module rob (
   end
 
   always @(posedge clk) begin
-    commit_rob_pos <= 0;
-
+    commit_rob_pos              <= 0;
+    rob_to_reg_enable           <= `FALSE;
+    rob_to_lsb_st_commit_enable <= `FALSE;
+    rob_to_if_br_commit_enable  <= `FALSE;
+    rob_to_reg_rd               <= 0;
+    rob_to_reg_val              <= 0;
 
     if (rst || clr) begin
       loop_head               <= 0;
@@ -133,9 +141,9 @@ module rob (
         real_jump[i] <= 0;
         dest_pc[i]   <= 0;
       end
-      rob_to_reg_enable           <= 0;
-      rob_to_lsb_st_commit_enable <= 0;
-      rob_to_if_br_commit_enable  <= 0;
+      // rob_to_reg_enable           <= 0;
+      // rob_to_lsb_st_commit_enable <= 0;
+      // rob_to_if_br_commit_enable  <= 0;
     end else if (!rdy) begin
       ;
     end else begin
@@ -173,14 +181,33 @@ module rob (
                   rd[loop_head], val[loop_head], real_jump[loop_head], dest_pc[loop_head],
                   pred_jump[loop_head] != real_jump[loop_head]);
 
-        $fdisplay(logfile, "rob_pos:%X", loop_head);
+        // $fdisplay(logfile, "rob_pos:%X", loop_head);
 `endif
 
 
+`ifdef DEBUG
+        // $fdisplay(logfile, "Commit ROB #%X  ", loop_head );
+        // $fdisplay(logfile, "  pc:%X", pc[loop_head]);
 
-        commit_rob_pos <= {1'b1, loop_head};
+        // $fdisplay(logfile, "rob_pos:%X", loop_head);
+`endif
+
+        ready[loop_head]     <= `FALSE;
+        rd[loop_head]        <= 0;
+        val[loop_head]       <= 0;
+        pc[loop_head]        <= 0;
+        opEnum[loop_head]    <= 0;
+        pred_jump[loop_head] <= 0;
+        real_jump[loop_head] <= 0;
+        dest_pc[loop_head]   <= 0;
+
+
+
+        commit_rob_pos       <= {1'b1, loop_head};
         if (head_is_store) begin
           rob_to_lsb_st_commit_enable <= `TRUE;
+
+
         end else if (!head_is_br) begin
           rob_to_reg_enable <= `TRUE;
           rob_to_reg_rd     <= rd[loop_head];

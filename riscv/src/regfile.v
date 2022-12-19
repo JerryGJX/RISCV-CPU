@@ -69,15 +69,60 @@ module regfile (
       ;
     end else begin
       if (correct_commit) begin
+
+`ifdef DEBUG
+        $fdisplay(logfile, "Reg @%t", $realtime);
+        for (i = 0; i < 32; i += 8) begin
+          $fdisplay(logfile, "%6H %6H %6H %6H %6H %6H %6H %6H", val_store[i], val_store[i+1],
+                    val_store[i+2], val_store[i+3], val_store[i+4], val_store[i+5], val_store[i+6],
+                    val_store[i+7]);
+        end
+`endif
+
         val_store[rob_to_reg_rd] <= rob_to_reg_val;
         if (rob_pos_match) rob_pos_store[rob_to_reg_rd] <= 0;
       end
+      
       if (issue_to_reg_enable && issue_to_reg_rd != 0)
         rob_pos_store[issue_to_reg_rd] <= issue_to_reg_rob_pos;
     end
+
+
+
+
+    // `ifdef DEBUG
+    //       $fdisplay(logfile, "reg[6]: %X, reg_rob[6]: %X", val_store[6], rob_pos_store[6]);
+
+    //       // $fdisplay(logfile, "  pc:%X", pc[loop_head]);
+
+    //       // $fdisplay(logfile, "rob_pos:%X", loop_head);
+    // `endif
+
+
+    // `ifdef DEBUG
+    //         $fdisplay(logfile, "Reg @%t", $realtime);
+    //         for (i = 0; i < 32; i += 8) begin
+    //           $fdisplay(logfile, "%6H %6H %6H %6H %6H %6H %6H %6H", val_store[i], val_store[i+1], val_store[i+2], val_store[i+3], val_store[i+4], val_store[i+5], val_store[i+6], val_store[i+7]);
+    //         end
+    // `endif
+
+
+
+
+
   end
 
 
+
+
+`ifdef DEBUG
+  integer logfile;
+  integer commit_cnt;
+  initial begin
+    logfile = $fopen("reg.log", "w");
+    commit_cnt = 0;
+  end
+`endif
 
 endmodule
 `endif

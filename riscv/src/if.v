@@ -45,8 +45,8 @@ module iFetch (
 
   //direct mapping iCache
   `define ICACHE_SIZE 256
-  `define INDEX_RANGE 7:0
-  `define TAG_RANGE 31:8
+  `define INDEX_RANGE 9:2
+  `define TAG_RANGE 31:10
 
   reg [`ICACHE_SIZE - 1:0] valid;  //bitset
   reg [`TAG_RANGE] tag_store[`ICACHE_SIZE - 1:0];

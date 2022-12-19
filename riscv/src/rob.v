@@ -100,9 +100,9 @@ module rob (
   assign rob_to_dc_next_rob_pos = {1'b1, loop_tail};
 
 
-  wire [  `ADDR_TYPE] head_pc = pc[loop_head];
+//  wire [  `ADDR_TYPE] head_pc = pc[loop_head];
   //fuck
-  wire [`OPENUM_TYPE] head_openum = opEnum[loop_head];
+//  wire [`OPENUM_TYPE] head_openum = opEnum[loop_head];
 
 
 
@@ -113,6 +113,9 @@ module rob (
     else
       next_num = ele_num + (issue_to_rob_enable ? 32'b1 : 32'b0) - (commit_enable ? 32'b1 : 32'b0);
   end
+
+
+  integer i;
 
   always @(posedge clk) begin
     commit_rob_pos              <= 0;
@@ -130,7 +133,7 @@ module rob (
       clr                     <= 0;
       rob_to_if_set_pc_enable <= 0;
       rob_to_if_target_pc     <= 0;
-      for (integer i = 0; i < `ROB_SIZE; i += 1) begin
+      for (i = 0; i < `ROB_SIZE; i = i + 1) begin
         ready[i]     <= 0;
         rd[i]        <= 0;
         val[i]       <= 0;

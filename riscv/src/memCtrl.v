@@ -62,7 +62,7 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
 
 
     if (executable) begin
-      mem_result = 32'b0;
+      // mem_result = 32'b0;
       if (chose_if) begin
         mc_to_mem_addr = if_to_mc_pc;
         mc_to_mem_wr   = `MEM_READ;
@@ -80,39 +80,39 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
         mc_to_mem_wr   = lsb_to_mc_wr;
         mc_to_mem_addr = lsb_to_mc_addr + {{30{1'b0}}, ls_step[1:0]} + 1;
         if (lsb_to_mc_wr == `MEM_READ) begin  //load
-          case (ls_step)
-            WAIT_FOR_FIRST_BYTE: mem_result[7:0] = mem_to_mc_din;
-            WAIT_FOR_SECOND_BYTE: mem_result[15:8] = mem_to_mc_din;
-            WAIT_FOR_THIRD_BYTE: mem_result[23:16] = mem_to_mc_din;
-            WAIT_FOR_FOURTH_BYTE: mem_result[31:24] = mem_to_mc_din;
-            default: ;
-          endcase
+          // case (ls_step)
+          //   WAIT_FOR_FIRST_BYTE: mem_result[7:0] = mem_to_mc_din;
+          //   WAIT_FOR_SECOND_BYTE: mem_result[15:8] = mem_to_mc_din;
+          //   WAIT_FOR_THIRD_BYTE: mem_result[23:16] = mem_to_mc_din;
+          //   WAIT_FOR_FOURTH_BYTE: mem_result[31:24] = mem_to_mc_din;
+          //   default: ;
+          // endcase
         end else begin  //store
           if (ls_step == ls_last_step) mc_to_mem_wr = `MEM_READ;
           else begin
-            case (ls_step)
-              WAIT_FOR_FIRST_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[15:8];
-              WAIT_FOR_SECOND_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[23:16];
-              WAIT_FOR_THIRD_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[31:24];
-              WAIT_FOR_FOURTH_BYTE: ;
-              default: ;
-            endcase
+            // case (ls_step)
+            //   WAIT_FOR_FIRST_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[15:8];
+            //   WAIT_FOR_SECOND_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[23:16];
+            //   WAIT_FOR_THIRD_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[31:24];
+            //   WAIT_FOR_FOURTH_BYTE: ;
+            //   default: ;
+            // endcase
           end
         end
       end else if (ls_step == IDLE && if_in_run) begin
         mc_to_mem_wr   = `MEM_READ;
         mc_to_mem_addr = if_to_mc_pc + {{30{1'b0}}, if_step[1:0]} + 1;
-        case (if_step)
-          WAIT_FOR_FIRST_BYTE: mem_result[7:0] = mem_to_mc_din;
-          WAIT_FOR_SECOND_BYTE: mem_result[15:8] = mem_to_mc_din;
-          WAIT_FOR_THIRD_BYTE: mem_result[23:16] = mem_to_mc_din;
-          WAIT_FOR_FOURTH_BYTE: mem_result[31:24] = mem_to_mc_din;
-          default: ;
-        endcase
+        // case (if_step)
+        //   WAIT_FOR_FIRST_BYTE: mem_result[7:0] = mem_to_mc_din;
+        //   WAIT_FOR_SECOND_BYTE: mem_result[15:8] = mem_to_mc_din;
+        //   WAIT_FOR_THIRD_BYTE: mem_result[23:16] = mem_to_mc_din;
+        //   WAIT_FOR_FOURTH_BYTE: mem_result[31:24] = mem_to_mc_din;
+        //   default: ;
+        // endcase
       end else begin
-        mc_to_mem_wr = `MEM_READ;
+        mc_to_mem_wr   = `MEM_READ;
         mc_to_mem_addr = 0;
-        mem_result = 0;
+        // mem_result = 0;
       end
     end
   end
@@ -129,6 +129,7 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
       mc_to_if_done     <= `FALSE;
       mc_to_if_result   <= 0;
       mc_to_lsb_ld_val  <= 0;
+      mem_result        <= 0;
     end else if (!rdy) begin
       if_step <= IDLE;
       ls_step <= IDLE;
@@ -159,20 +160,34 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
           // mc_to_mem_wr <= `MEM_READ;  //important
           if (if_step != if_last_step) begin
             case (if_step)
-              WAIT_FOR_FIRST_BYTE: if_step <= WAIT_FOR_SECOND_BYTE;
-              WAIT_FOR_SECOND_BYTE: if_step <= WAIT_FOR_THIRD_BYTE;
-              WAIT_FOR_THIRD_BYTE: if_step <= WAIT_FOR_FOURTH_BYTE;
-              WAIT_FOR_FOURTH_BYTE: if_step <= GEP;
+              WAIT_FOR_FIRST_BYTE: begin
+                if_step <= WAIT_FOR_SECOND_BYTE;
+                mem_result[7:0] <= mem_to_mc_din;
+              end
+              WAIT_FOR_SECOND_BYTE: begin
+                if_step <= WAIT_FOR_THIRD_BYTE;
+                mem_result[15:8] <= mem_to_mc_din;
+              end
+              WAIT_FOR_THIRD_BYTE: begin
+                if_step <= WAIT_FOR_FOURTH_BYTE;
+                mem_result[23:16] <= mem_to_mc_din;
+              end
+              WAIT_FOR_FOURTH_BYTE: begin
+                if_step <= GEP;
+                mem_result[31:24] <= mem_to_mc_din;
+              end
               default: ;
             endcase
           end else begin
             if_step         <= GEP;
-            mc_to_if_result <= mem_result;
+            mc_to_if_result <= {mem_to_mc_din, mem_result[23:0]};
+            mem_result      <= 0;
             mc_to_if_done   <= `TRUE;
           end
         end else if (if_step == IDLE && ls_in_run) begin
           if (clr && lsb_to_mc_wr == `MEM_READ) begin
             ls_step <= IDLE;
+            mem_result <= 0;
           end else begin
             // mc_to_mem_wr <= lsb_to_mc_wr;
             if (ls_step != ls_last_step) begin
@@ -183,10 +198,27 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
                 WAIT_FOR_FOURTH_BYTE: ls_step <= GEP;
                 default: ;
               endcase
+
+              if (lsb_to_mc_wr == `MEM_READ) begin
+                case (ls_step)
+                  WAIT_FOR_FIRST_BYTE: mem_result[7:0] <= mem_to_mc_din;
+                  WAIT_FOR_SECOND_BYTE: mem_result[15:8] <= mem_to_mc_din;
+                  WAIT_FOR_THIRD_BYTE: mem_result[23:16] <= mem_to_mc_din;
+                  WAIT_FOR_FOURTH_BYTE: mem_result[31:24] <= mem_to_mc_din;
+                  default: ;
+                endcase
+              end
             end else begin  //last step
               ls_step <= GEP;
               if (lsb_to_mc_wr == `MEM_READ) begin
-                mc_to_lsb_ld_val  <= mem_result;
+                case (ls_last_step)
+                  WAIT_FOR_FIRST_BYTE: mc_to_lsb_ld_val <= {24'b0, mem_to_mc_din};
+                  WAIT_FOR_SECOND_BYTE: mc_to_lsb_ld_val <= {16'b0, mem_to_mc_din, mem_result[7:0]};
+                  WAIT_FOR_THIRD_BYTE: mc_to_lsb_ld_val <= {8'b0, mem_to_mc_din, mem_result[15:0]};
+                  WAIT_FOR_FOURTH_BYTE: mc_to_lsb_ld_val <= {mem_to_mc_din, mem_result[23:0]};
+                  default: ;
+                endcase
+                mem_result <= 0;
                 mc_to_lsb_ld_done <= `TRUE;
               end else begin  //store
                 mc_to_lsb_st_done <= `TRUE;

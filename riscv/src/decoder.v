@@ -86,12 +86,11 @@ module decoder (
     issue_pred_jump   = if_to_dc_pred_jump;
     issue_ready_inst  = `FALSE;
     issue_rob_pos     = rob_to_dc_next_rob_pos;
-
+    rs_enable         = `FALSE;
+    lsb_enable        = `FALSE;
 
     if (rst || !if_to_dc_enable || clr) begin
       issue_enable = `FALSE;
-      rs_enable = `FALSE;
-      lsb_enable = `FALSE;
     end else if (!rdy) begin
       ;
     end else begin

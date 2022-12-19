@@ -100,7 +100,6 @@ module iFetch (
     endcase
   end
 
-
   //decode
   always @(*) begin
     local_lsb_enable          = `FALSE;
@@ -109,179 +108,33 @@ module iFetch (
     local_lsb_dispatch_enable = `FALSE;
     local_issue_enable        = `FALSE;
 
-
     case (hit_inst_val[`OPCODE_RANGE])
       `OPCODE_RC: begin
         local_rs_enable = `TRUE;
-        case (hit_inst_val[`FUNC3_RANGE])
-          `FUNC3_ADD_SUB: begin
-            case (hit_inst_val[`FUNC7_RANGE])
-              `FUNC7_ADD: begin
-                // local_inst_openum = `OPENUM_ADD;
-              end
-              `FUNC7_SUB: begin
-                // local_inst_openum = `OPENUM_SUB;
-              end
-              default;
-            endcase
-          end
-          `FUNC3_XOR: begin
-            // local_inst_openum = `OPENUM_XOR;
-          end
-          `FUNC3_OR: begin
-            // local_inst_openum = `OPENUM_OR;
-          end
-          `FUNC3_AND: begin
-            // local_inst_openum = `OPENUM_AND;
-          end
-          `FUNC3_SLL: begin
-            // local_inst_openum = `OPENUM_SLL;
-          end
-          `FUNC3_SRL_SRA: begin
-            case (hit_inst_val[`FUNC7_RANGE])
-              `FUNC7_SRL: begin
-                // local_inst_openum = `OPENUM_SRL;
-              end
-              `FUNC7_SRA: begin
-                // local_inst_openum = `OPENUM_SRA;
-              end
-              default;
-            endcase
-          end
-          `FUNC3_SLT: begin
-            // local_inst_openum = `OPENUM_SLT;
-          end
-          `FUNC3_SLTU: begin
-            // local_inst_openum = `OPENUM_SLTU;
-          end
-          default;
-        endcase
       end
-
       `OPCODE_RI: begin
         local_rs_enable = `TRUE;
-        case (hit_inst_val[`FUNC3_RANGE])
-          `FUNC3_ADDI: begin
-            // local_inst_openum = `OPENUM_ADDI;
-          end
-          `FUNC3_XORI: begin
-            // local_inst_openum = `OPENUM_XORI;
-          end
-          `FUNC3_ORI: begin
-            // local_inst_openum = `OPENUM_ORI;
-          end
-          `FUNC3_ANDI: begin
-            // local_inst_openum = `OPENUM_ANDI;
-          end
-          `FUNC3_SLLI: begin
-            // local_inst_openum = `OPENUM_SLLI;
-          end
-          `FUNC3_SRLI_SRAI: begin
-            case (hit_inst_val[`FUNC7_RANGE])
-              `FUNC7_SRLI: begin
-                // local_inst_openum = `OPENUM_SRLI;
-              end
-              `FUNC7_SRAI: begin
-                // local_inst_openum = `OPENUM_SRAI;
-              end
-              default;
-            endcase
-          end
-          `FUNC3_SLTI: begin
-            // local_inst_openum = `OPENUM_SLTI;
-          end
-          `FUNC3_SLTIU: begin
-            // local_inst_openum = `OPENUM_SLTIU;
-          end
-          default;
-        endcase
       end
-
       `OPCODE_LD: begin
         local_lsb_enable = `TRUE;
-        case (hit_inst_val[`FUNC3_RANGE])
-          `FUNC3_LB: begin
-            // local_inst_openum = `OPENUM_LB;
-          end
-          `FUNC3_LH: begin
-            // local_inst_openum = `OPENUM_LH;
-          end
-          `FUNC3_LW: begin
-            // local_inst_openum = `OPENUM_LW;
-          end
-          `FUNC3_LBU: begin
-            // local_inst_openum = `OPENUM_LBU;
-          end
-          `FUNC3_LHU: begin
-            // local_inst_openum = `OPENUM_LHU;
-          end
-          default;
-        endcase
       end
-
       `OPCODE_ST: begin
         local_lsb_enable = `TRUE;
-        case (hit_inst_val[`FUNC3_RANGE])
-          `FUNC3_SB: begin
-            // local_inst_openum = `OPENUM_SB;
-          end
-          `FUNC3_SH: begin
-            // local_inst_openum = `OPENUM_SH;
-          end
-          `FUNC3_SW: begin
-            // local_inst_openum = `OPENUM_SW;
-          end
-          default;
-        endcase
       end
-
       `OPCODE_BR: begin
         local_rs_enable = `TRUE;
-        case (hit_inst_val[`FUNC3_RANGE])
-          `FUNC3_BEQ: begin
-            // local_inst_openum = `OPENUM_BEQ;
-          end
-          `FUNC3_BNE: begin
-            // local_inst_openum = `OPENUM_BNE;
-          end
-          `FUNC3_BLT: begin
-            // local_inst_openum = `OPENUM_BLT;
-          end
-          `FUNC3_BGE: begin
-            // local_inst_openum = `OPENUM_BGE;
-          end
-          `FUNC3_BLTU: begin
-            // local_inst_openum = `OPENUM_BLTU;
-          end
-          `FUNC3_BGEU: begin
-            // local_inst_openum = `OPENUM_BGEU;
-          end
-          default;
-        endcase
       end
-
       `OPCODE_JAL: begin
         local_rs_enable = `TRUE;
-
-        // local_inst_openum = `OPENUM_JAL;
       end
-
       `OPCODE_JALR: begin
         local_rs_enable = `TRUE;
-
-        // local_inst_openum = `OPENUM_JALR;
       end
-
       `OPCODE_LUI: begin
         local_rs_enable = `TRUE;
-
-        // local_inst_openum = `OPENUM_LUI;
       end
-
       `OPCODE_AUIPC: begin
         local_rs_enable = `TRUE;
-
-        // local_inst_openum = `OPENUM_AUIPC;
       end
       default;
     endcase
@@ -319,22 +172,8 @@ module iFetch (
           pc                  <= pred_pc;
           if_to_dc_pred_jump  <= pred_jump;
 
-          // if_to_dc_openum     <= local_inst_openum;
-
-
-          // case (local_inst_openum)
-          //   `OPENUM_NOP: begin
-          //     if_to_dc_openum <= `OPENUM_NOP;
-          //   end
-          //   `OPENUM_ADD: if_to_dc_openum <= `OPENUM_ADD;
-          //   default;
-
-          // endcase
-
-
           case (hit_inst_val[`OPCODE_RANGE])
             `OPCODE_RC: begin
-              // local_rs_enable = `TRUE;
               case (hit_inst_val[`FUNC3_RANGE])
                 `FUNC3_ADD_SUB: begin
                   case (hit_inst_val[`FUNC7_RANGE])
@@ -379,9 +218,7 @@ module iFetch (
                 default;
               endcase
             end
-
             `OPCODE_RI: begin
-              // local_rs_enable = `TRUE;
               case (hit_inst_val[`FUNC3_RANGE])
                 `FUNC3_ADDI: begin
                   if_to_dc_openum <= `OPENUM_ADDI;
@@ -418,9 +255,7 @@ module iFetch (
                 default;
               endcase
             end
-
             `OPCODE_LD: begin
-              // local_lsb_enable = `TRUE;
               case (hit_inst_val[`FUNC3_RANGE])
                 `FUNC3_LB: begin
                   if_to_dc_openum <= `OPENUM_LB;
@@ -440,9 +275,7 @@ module iFetch (
                 default;
               endcase
             end
-
             `OPCODE_ST: begin
-              // local_lsb_enable = `TRUE;
               case (hit_inst_val[`FUNC3_RANGE])
                 `FUNC3_SB: begin
                   if_to_dc_openum <= `OPENUM_SB;
@@ -456,9 +289,7 @@ module iFetch (
                 default;
               endcase
             end
-
             `OPCODE_BR: begin
-              // local_rs_enable = `TRUE;
               case (hit_inst_val[`FUNC3_RANGE])
                 `FUNC3_BEQ: begin
                   if_to_dc_openum <= `OPENUM_BEQ;
@@ -481,42 +312,20 @@ module iFetch (
                 default;
               endcase
             end
-
             `OPCODE_JAL: begin
-              local_rs_enable = `TRUE;
-
               if_to_dc_openum <= `OPENUM_JAL;
             end
-
             `OPCODE_JALR: begin
-              local_rs_enable = `TRUE;
-
               if_to_dc_openum <= `OPENUM_JALR;
             end
-
             `OPCODE_LUI: begin
-              local_rs_enable = `TRUE;
-
               if_to_dc_openum <= `OPENUM_LUI;
             end
-
             `OPCODE_AUIPC: begin
-              local_rs_enable = `TRUE;
-
               if_to_dc_openum <= `OPENUM_AUIPC;
             end
             default;
           endcase
-
-
-
-
-
-
-
-
-
-
 
         end else begin
           if_to_dc_enable <= `FALSE;

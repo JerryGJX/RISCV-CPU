@@ -34,6 +34,7 @@ module lsb (
     //with rob
     input wire                      rob_to_lsb_st_commit,
     input wire [`ROB_WRAP_POS_TYPE] rob_to_lsb_st_rob_pos,
+    input wire [`ROB_WRAP_POS_TYPE] rob_to_lsb_head_rob_pos,
 
     //lsb broadcast
     output wire                      lsb_broadcast_next_full,
@@ -55,15 +56,15 @@ module lsb (
 );
 
 
-  reg                      busy       [`LSB_SIZE - 1:0];
-  reg [      `OPENUM_TYPE] openum     [`LSB_SIZE - 1:0];
-  reg [`ROB_WRAP_POS_TYPE] rob_pos    [`LSB_SIZE - 1:0];
-  reg [        `DATA_TYPE] rs1_val    [`LSB_SIZE - 1:0];
-  reg [`ROB_WRAP_POS_TYPE] rs1_rob_pos[`LSB_SIZE - 1:0];
-  reg [        `DATA_TYPE] rs2_val    [`LSB_SIZE - 1:0];
-  reg [`ROB_WRAP_POS_TYPE] rs2_rob_pos[`LSB_SIZE - 1:0];
-  reg [        `DATA_TYPE] imm        [`LSB_SIZE - 1:0];
-  reg                      commit     [`LSB_SIZE - 1:0];
+  reg [   `LSB_SIZE - 1:0 ] busy;
+  reg [      `OPENUM_TYPE]  openum     [`LSB_SIZE - 1:0];
+  reg [`ROB_WRAP_POS_TYPE]  rob_pos    [`LSB_SIZE - 1:0];
+  reg [        `DATA_TYPE]  rs1_val    [`LSB_SIZE - 1:0];
+  reg [`ROB_WRAP_POS_TYPE]  rs1_rob_pos[`LSB_SIZE - 1:0];
+  reg [        `DATA_TYPE]  rs2_val    [`LSB_SIZE - 1:0];
+  reg [`ROB_WRAP_POS_TYPE]  rs2_rob_pos[`LSB_SIZE - 1:0];
+  reg [        `DATA_TYPE]  imm        [`LSB_SIZE - 1:0];
+  reg [   `LSB_SIZE - 1:0 ] commit;
 
   parameter STATUS_IDLE = 0, STATUS_WAIT = 1;
 
@@ -78,10 +79,12 @@ module lsb (
 
   assign lsb_broadcast_next_full = (next_ele_num == `LSB_SIZE);
 
+
   wire [`ADDR_TYPE] head_addr = rs1_val[loop_head] + imm[loop_head];
+  wire head_is_io = head_addr[17:16] == 2'b11;
   wire head_load_type = (openum[loop_head] == `OPENUM_LB) || (openum[loop_head] == `OPENUM_LH) || (openum[loop_head] == `OPENUM_LW) || (openum[loop_head] == `OPENUM_LBU) || (openum[loop_head] == `OPENUM_LHU);
   wire head_pop = (head_status == STATUS_WAIT) && (mc_to_lsb_st_done || mc_to_lsb_ld_done);
-  wire head_excutable = ele_num != 0 && rs1_rob_pos[loop_head] == 0 && rs2_rob_pos[loop_head] == 0 && ((head_load_type && !clr)|| commit[loop_head]);
+  wire head_excutable = ele_num != 0 && rs1_rob_pos[loop_head] == 0 && rs2_rob_pos[loop_head] == 0 && ((head_load_type && !clr && (head_is_io || rob_pos[loop_head] == rob_to_lsb_head_rob_pos))|| commit[loop_head]);
 
   always @(*) begin
     if (rst) begin
@@ -113,7 +116,6 @@ module lsb (
       lsb_to_mc_ls_type <= `BYTE_TYPE;
       lsb_to_mc_addr    <= 0;
       lsb_to_mc_st_val  <= 0;
-
       for (i = 0; i < `LSB_SIZE; i = i + 1) begin
         busy[i]        <= `FALSE;
         openum[i]      <= `OPENUM_NOP;

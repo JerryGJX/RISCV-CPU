@@ -34,6 +34,7 @@ module rob (
 
     //rob to lsb
     output reg                       rob_to_lsb_st_commit_enable,
+    output reg  [`ROB_WRAP_POS_TYPE] rob_to_lsb_head_rob_pos,
     //lsb to rob
     input  wire                      lsb_to_rob_ld_ready,
     input  wire [`ROB_WRAP_POS_TYPE] lsb_to_rob_ld_rob_pos,
@@ -65,19 +66,20 @@ module rob (
     //todo
 
 );
-  reg                 ready    [`ROB_SIZE-1:0];
-  reg [`REG_POS_TYPE] rd       [`ROB_SIZE-1:0];
-  reg [   `DATA_TYPE] val      [`ROB_SIZE-1:0];
-  reg [   `ADDR_TYPE] pc       [`ROB_SIZE-1:0];
-  reg [ `OPENUM_TYPE] opEnum   [`ROB_SIZE-1:0];
-  reg                 pred_jump[`ROB_SIZE-1:0];
-  reg                 real_jump[`ROB_SIZE-1:0];
-  reg [   `ADDR_TYPE] dest_pc  [`ROB_SIZE-1:0];
+  reg [`ROB_SIZE-1:0 ] ready;
+  reg [`REG_POS_TYPE]  rd        [`ROB_SIZE-1:0];
+  reg [   `DATA_TYPE]  val       [`ROB_SIZE-1:0];
+  reg [   `ADDR_TYPE]  pc        [`ROB_SIZE-1:0];
+  reg [ `OPENUM_TYPE]  opEnum    [`ROB_SIZE-1:0];
+  reg [`ROB_SIZE-1:0 ] pred_jump;
+  reg [`ROB_SIZE-1:0 ] real_jump;
+  reg [   `ADDR_TYPE]  dest_pc   [`ROB_SIZE-1:0];
 
   reg [`ROB_POS_TYPE] loop_head, loop_tail;  //[loop_head,loop_tail)
   reg [`NUM_TYPE] ele_num;
   reg [`NUM_TYPE] next_num;
   reg commit_enable;
+  reg input_load_enable;
 
   wire head_is_br = opEnum[loop_head] == `OPENUM_BEQ ||
         opEnum[loop_head] == `OPENUM_BNE ||
@@ -90,6 +92,12 @@ module rob (
         opEnum[loop_head] == `OPENUM_SH|| 
         opEnum[loop_head] == `OPENUM_SW;
 
+  wire head_is_load = opEnum[loop_head] == `OPENUM_LB||
+        opEnum[loop_head] == `OPENUM_LH||
+        opEnum[loop_head] == `OPENUM_LW||
+        opEnum[loop_head] == `OPENUM_LBU||
+        opEnum[loop_head] == `OPENUM_LHU;
+
   //check
   assign rob_next_full = (next_num == `ROB_SIZE);
   //form decoder
@@ -100,15 +108,16 @@ module rob (
   assign rob_to_dc_next_rob_pos = {1'b1, loop_tail};
 
 
-//  wire [  `ADDR_TYPE] head_pc = pc[loop_head];
+  //  wire [  `ADDR_TYPE] head_pc = pc[loop_head];
   //fuck
-//  wire [`OPENUM_TYPE] head_openum = opEnum[loop_head];
+  //  wire [`OPENUM_TYPE] head_openum = opEnum[loop_head];
 
 
 
 
   always @(*) begin
     commit_enable = (!clr) && (ele_num > 0) && (ready[loop_head] == `TRUE);
+    input_load_enable = (!clr) && (ele_num > 0) && head_is_load && pc[loop_head] == `IO_ADDR;
     if (rst || clr) next_num = 32'b0;
     else
       next_num = ele_num + (issue_to_rob_enable ? 32'b1 : 32'b0) - (commit_enable ? 32'b1 : 32'b0);
@@ -124,6 +133,7 @@ module rob (
     rob_to_if_br_commit_enable  <= `FALSE;
     rob_to_reg_rd               <= 0;
     rob_to_reg_val              <= 0;
+    rob_to_lsb_head_rob_pos     <= {1'b1, loop_head};
 
     if (rst || clr) begin
       loop_head               <= 0;
@@ -169,9 +179,10 @@ module rob (
         dest_pc[alu_to_rob_result_rob_pos[`ROB_POS_TYPE]]   <= alu_to_rob_result_pc;
       end
 
-      rob_to_reg_enable           <= `FALSE;
-      rob_to_lsb_st_commit_enable <= `FALSE;
-      rob_to_if_br_commit_enable  <= `FALSE;
+      // if (input_load_enable) begin
+      //   rob_to_lsb_input_ld_enable  <= `TRUE;
+      //   rob_to_lsb_input_ld_rob_pos <= {1'b1, loop_head};
+      // end
 
       if (commit_enable) begin
 `ifdef DEBUG

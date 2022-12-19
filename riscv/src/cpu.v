@@ -329,6 +329,7 @@ module cpu (
   //lsb with rob
   wire                      lsb_with_rob_st_commit;
   wire [`ROB_WRAP_POS_TYPE] lsb_with_rob_st_rob_pos;
+  wire [`ROB_WRAP_POS_TYPE] lsb_with_rob_head_rob_pos;
 
   lsb u_lsb (
       .clk                     (clk_in),
@@ -353,6 +354,7 @@ module cpu (
       .lsb_to_mc_st_val        (mc_with_lsb_st_val),
       .rob_to_lsb_st_commit    (lsb_with_rob_st_commit),
       .rob_to_lsb_st_rob_pos   (rob_commit_rob_pos),
+      .rob_to_lsb_head_rob_pos (lsb_with_rob_head_rob_pos),
       .lsb_broadcast_next_full (lsb_next_full),
       .lsb_broadcast_ld_done   (lsb_load_result_ready),
       .lsb_broadcast_ld_rob_pos(lsb_load_result_rob_pos),
@@ -385,6 +387,7 @@ module cpu (
       .rob_to_reg_rd              (reg_with_rob_rd),
       .rob_to_reg_val             (reg_with_rob_val),
       .rob_to_lsb_st_commit_enable(lsb_with_rob_st_commit),
+      .rob_to_lsb_head_rob_pos    (lsb_with_rob_head_rob_pos),
       .lsb_to_rob_ld_ready        (lsb_load_result_ready),
       .lsb_to_rob_ld_rob_pos      (lsb_load_result_rob_pos),
       .lsb_to_rob_ld_val          (lsb_load_result_val),

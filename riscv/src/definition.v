@@ -20,9 +20,9 @@
 
 //position type
 `define REG_POS_TYPE 4:0//for rs1,rs2,rd
-`define ROB_POS_TYPE 4:0
-`define ROB_WRAP_POS_TYPE 5:0
-`define RS_POS_TYPE 3:0
+`define ROB_POS_TYPE 3:0
+`define ROB_WRAP_POS_TYPE 4:0
+`define RS_POS_TYPE 2:0
 `define LSB_POS_TYPE 3:0
 
 
@@ -35,8 +35,8 @@
 `define OPCODE_RANGE 6:0
 
 //size of element
-`define ROB_SIZE 32'd32
-`define RS_SIZE 32'd16
+`define ROB_SIZE 32'd16
+`define RS_SIZE 32'd8
 `define REG_SIZE 32'd32
 `define LSB_SIZE 32'd16
 
@@ -52,6 +52,7 @@
 `define BLANK_ADDR 32'd0
 `define PC_DEFALT_STEP 32'd4
 
+`define IO_ADDR 32'h30000
 
 //opcode
 `define OPCODE_TYPE 6:0

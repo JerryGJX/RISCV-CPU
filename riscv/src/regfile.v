@@ -82,7 +82,7 @@ module regfile (
         val_store[rob_to_reg_rd] <= rob_to_reg_val;
         if (rob_pos_match) rob_pos_store[rob_to_reg_rd] <= 0;
       end
-      
+
       if (issue_to_reg_enable && issue_to_reg_rd != 0)
         rob_pos_store[issue_to_reg_rd] <= issue_to_reg_rob_pos;
     end

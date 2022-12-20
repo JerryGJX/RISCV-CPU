@@ -44,8 +44,8 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
   reg [`DATA_TYPE] mem_result;
 
 
-  wire chose_if = (if_to_mc_enable && !lsb_to_mc_enable)||(if_to_mc_enable && lsb_to_mc_enable && last_lsb);
-  wire chose_ls = (!if_to_mc_enable && lsb_to_mc_enable)||(if_to_mc_enable && lsb_to_mc_enable && !last_lsb);
+  wire chose_if = (if_to_mc_enable && !lsb_to_mc_enable) || (if_to_mc_enable && lsb_to_mc_enable);
+  wire chose_ls = ((!if_to_mc_enable && lsb_to_mc_enable)||(if_to_mc_enable && lsb_to_mc_enable )) && (lsb_to_mc_wr == `MEM_READ || lsb_to_mc_addr[17:16] != 2'b11 || !io_buffer_full);
 
   wire executable = (ls_step == IDLE && if_step == IDLE) && rdy && !rst && !clr && (chose_if||chose_ls);
 
@@ -63,34 +63,30 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
 
     if (executable) begin
       // mem_result = 32'b0;
-      if (chose_if) begin
-        mc_to_mem_addr = if_to_mc_pc;
-        mc_to_mem_wr   = `MEM_READ;
-      end else if (chose_ls) begin
+      if (chose_ls) begin
         mc_to_mem_addr = lsb_to_mc_addr;
         mc_to_mem_wr   = lsb_to_mc_wr;
         if (mc_to_mem_wr == `MEM_WRITE) begin
           mc_to_mem_dout = lsb_to_mc_st_val[7:0];
         end
+      end else if (chose_if) begin
+        mc_to_mem_addr = if_to_mc_pc;
+        mc_to_mem_wr   = `MEM_READ;
       end
     end else if (if_step == GEP || ls_step == GEP) begin
       mc_to_mem_wr = `MEM_READ;
     end else begin
       if (ls_in_run && if_step == IDLE) begin
-        mc_to_mem_wr   = lsb_to_mc_wr;
-        mc_to_mem_addr = lsb_to_mc_addr + {{30{1'b0}}, ls_step[1:0]} + 1;
-        if (lsb_to_mc_wr == `MEM_READ) begin  //load
-          // case (ls_step)
-          //   WAIT_FOR_FIRST_BYTE: mem_result[7:0] = mem_to_mc_din;
-          //   WAIT_FOR_SECOND_BYTE: mem_result[15:8] = mem_to_mc_din;
-          //   WAIT_FOR_THIRD_BYTE: mem_result[23:16] = mem_to_mc_din;
-          //   WAIT_FOR_FOURTH_BYTE: mem_result[31:24] = mem_to_mc_din;
-          //   default: ;
-          // endcase
-        end else begin  //store
-          if (ls_step == ls_last_step) mc_to_mem_wr = `MEM_READ;
-          else begin
-            if (mc_to_mem_addr[17:16] != 2'b11 || !io_buffer_full) begin
+        if (lsb_to_mc_wr == `MEM_READ || mc_to_mem_addr[17:16] != 2'b11 || !io_buffer_full) begin
+          mc_to_mem_wr   = lsb_to_mc_wr;
+          mc_to_mem_addr = lsb_to_mc_addr + {{30{1'b0}}, ls_step[1:0]} + 1;
+          if (lsb_to_mc_wr == `MEM_READ) begin  //load
+
+          end else begin  //store
+            if (ls_step == ls_last_step) begin
+              mc_to_mem_wr   = `MEM_READ;
+              mc_to_mem_addr = 0;
+            end else begin
               case (ls_step)
                 WAIT_FOR_FIRST_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[15:8];
                 WAIT_FOR_SECOND_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[23:16];
@@ -98,10 +94,11 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
                 WAIT_FOR_FOURTH_BYTE: ;
                 default: ;
               endcase
-            end else begin
-              mc_to_mem_wr = `MEM_READ;
             end
           end
+        end else begin
+          mc_to_mem_wr   = `MEM_READ;
+          mc_to_mem_addr = 0;
         end
       end else if (ls_step == IDLE && if_in_run) begin
         mc_to_mem_wr   = `MEM_READ;
@@ -149,13 +146,10 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
 
       if (if_step == IDLE && ls_step == IDLE) begin  //mem idle
         if (!clr) begin
-          if (chose_if) begin
-            if_step  <= WAIT_FOR_FIRST_BYTE;
-            last_lsb <= `FALSE;
-          end else if (chose_ls) begin
-            if (lsb_to_mc_wr == `MEM_READ || mc_to_mem_addr[17:16] != 2'b11 || !io_buffer_full)
-              ls_step <= WAIT_FOR_FIRST_BYTE;
-            last_lsb <= `TRUE;
+          if (chose_ls) begin
+            ls_step <= WAIT_FOR_FIRST_BYTE;
+          end else if (chose_if) begin
+            if_step <= WAIT_FOR_FIRST_BYTE;
           end
         end
       end else if (if_step == GEP) begin
@@ -196,9 +190,8 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
             ls_step <= IDLE;
             mem_result <= 0;
           end else begin
-            // mc_to_mem_wr <= lsb_to_mc_wr;
             if (ls_step != ls_last_step) begin
-              if (lsb_to_mc_wr == `MEM_READ || (mc_to_mem_addr[17:16] != 2'b11 || !io_buffer_full)) begin
+              if (lsb_to_mc_wr == `MEM_READ || (lsb_to_mc_addr[17:16] != 2'b11 || !io_buffer_full)) begin
                 case (ls_step)
                   WAIT_FOR_FIRST_BYTE: ls_step <= WAIT_FOR_SECOND_BYTE;
                   WAIT_FOR_SECOND_BYTE: ls_step <= WAIT_FOR_THIRD_BYTE;

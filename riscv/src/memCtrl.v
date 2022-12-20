@@ -150,6 +150,7 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
               ls_step  <= WAIT_FOR_FIRST_BYTE;
               last_lsb <= `TRUE;
             end
+
           end
         end
       end else if (if_step == GEP) begin

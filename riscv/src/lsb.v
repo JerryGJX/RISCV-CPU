@@ -84,7 +84,7 @@ module lsb (
   wire head_is_io = head_addr[17:16] == 2'b11;
   wire head_load_type = (openum[loop_head] == `OPENUM_LB) || (openum[loop_head] == `OPENUM_LH) || (openum[loop_head] == `OPENUM_LW) || (openum[loop_head] == `OPENUM_LBU) || (openum[loop_head] == `OPENUM_LHU);
   wire head_pop = (head_status == STATUS_WAIT) && (mc_to_lsb_st_done || mc_to_lsb_ld_done);
-  wire head_excutable = ele_num != 0 && rs1_rob_pos[loop_head] == 0 && rs2_rob_pos[loop_head] == 0 && ((head_load_type && !clr && (head_is_io || rob_pos[loop_head] == rob_to_lsb_head_rob_pos))|| commit[loop_head]);
+  wire head_excutable = ele_num != 0 && rs1_rob_pos[loop_head] == 0 && rs2_rob_pos[loop_head] == 0 && ((head_load_type && !clr && (!head_is_io || rob_pos[loop_head] == rob_to_lsb_head_rob_pos))|| commit[loop_head]);
 
   always @(*) begin
     if (rst) begin

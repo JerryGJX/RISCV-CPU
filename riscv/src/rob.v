@@ -1,5 +1,7 @@
 `ifndef macro_rob
 `define macro_rob
+// `define DEBUG
+
 `include "definition.v"
 
 module rob (
@@ -186,7 +188,7 @@ module rob (
 
       if (commit_enable) begin
 `ifdef DEBUG
-        $fdisplay(logfile, "Commit ROB #%X (%d) @%t", loop_head, commit_cnt, $realtime);
+        $fdisplay(logfile, "Commit ROB #%X (%d)", loop_head, commit_cnt);
         commit_cnt++;
         $fdisplay(logfile, "  pc:%X, rd:%X, val:%X, jump:%b, respc:%X, rollback:%b", pc[loop_head],
                   rd[loop_head], val[loop_head], real_jump[loop_head], dest_pc[loop_head],

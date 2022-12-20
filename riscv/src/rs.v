@@ -80,10 +80,7 @@ module RS (
   //31:0
 
   integer i;
-
   `define FLAG_POS 32'd16
-
-  reg rs_nxt_full_helper[`RS_SIZE-1:0];
 
   always @(*) begin
     max_ready_rs_pos = `FLAG_POS;
@@ -98,25 +95,16 @@ module RS (
       if (ready[i] == `TRUE) max_ready_rs_pos = i;
     end
 
-    //   if (rst || clr) next_busy_num = 32'b0;
-    //   else
-    //     next_busy_num = busy_num + (issue_to_rs_enable ? 32'b1 : 32'b0) - (max_ready_rs_pos != `FLAG_POS ? 32'b1 : 32'b0);
+    if (rst || clr) next_busy_num = 32'b0;
+    else
+      next_busy_num = busy_num + (issue_to_rs_enable ? 32'b1 : 32'b0) - (max_ready_rs_pos != `FLAG_POS ? 32'b1 : 32'b0);
 
-    //   rs_next_full = (next_busy_num == `RS_SIZE);
-
+    rs_next_full = (next_busy_num == `RS_SIZE);
   end
-
-  always @(*) begin
-    rs_nxt_full_helper[0] = busy[0];
-    for (i = 1; i < `RS_SIZE; i = i + 1)
-      rs_nxt_full_helper[i] = (busy[i] || issue_to_rs_enable && i == min_free_rs_pos) & rs_nxt_full_helper[i-1];
-    rs_next_full = rs_nxt_full_helper[`RS_SIZE-1];
-  end
-
 
   always @(posedge clk) begin
     if (rst || clr) begin
-      // busy_num <= 32'b0;
+      busy_num <= 32'b0;
       for (i = 0; i < `RS_SIZE; i = i + 1) begin
         busy[i] <= `FALSE;
       end
@@ -125,7 +113,7 @@ module RS (
       ;
     end else begin
       rs_to_alu_enable <= `FALSE;
-      // busy_num <= next_busy_num;
+      busy_num <= next_busy_num;
       if (max_ready_rs_pos != `FLAG_POS) begin
         rs_to_alu_enable       <= `TRUE;
         rs_to_alu_openum       <= openum[max_ready_rs_pos];

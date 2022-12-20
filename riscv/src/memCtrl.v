@@ -150,9 +150,12 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
       if (if_step == IDLE && ls_step == IDLE) begin  //mem idle
         if (!clr) begin
           if (chose_if) begin
-            if_step <= WAIT_FOR_FIRST_BYTE;
+            if_step  <= WAIT_FOR_FIRST_BYTE;
+            last_lsb <= `FALSE;
           end else if (chose_ls) begin
-            if (mc_to_mem_addr[17:16] != 2'b11 || !io_buffer_full) ls_step <= WAIT_FOR_FIRST_BYTE;
+            if (lsb_to_mc_wr == `MEM_READ || mc_to_mem_addr[17:16] != 2'b11 || !io_buffer_full)
+              ls_step <= WAIT_FOR_FIRST_BYTE;
+            last_lsb <= `TRUE;
           end
         end
       end else if (if_step == GEP) begin

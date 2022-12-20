@@ -34,7 +34,7 @@ module rob (
 
     //rob to lsb
     output reg                       rob_to_lsb_st_commit_enable,
-    output reg  [`ROB_WRAP_POS_TYPE] rob_to_lsb_head_rob_pos,
+    output wire [`ROB_WRAP_POS_TYPE] rob_to_lsb_head_rob_pos,
     //lsb to rob
     input  wire                      lsb_to_rob_ld_ready,
     input  wire [`ROB_WRAP_POS_TYPE] lsb_to_rob_ld_rob_pos,
@@ -99,14 +99,14 @@ module rob (
         opEnum[loop_head] == `OPENUM_LHU;
 
   //check
-  assign rob_next_full = (next_num == `ROB_SIZE);
+  assign rob_next_full           = (next_num == `ROB_SIZE);
   //form decoder
-  assign rob_to_dc_rs1_ready = ready[dc_to_rob_rs1_pos[`ROB_POS_TYPE]];
-  assign rob_to_dc_rs2_ready = ready[dc_to_rob_rs2_pos[`ROB_POS_TYPE]];
-  assign rob_to_dc_rs1_val = val[dc_to_rob_rs1_pos[`ROB_POS_TYPE]];
-  assign rob_to_dc_rs2_val = val[dc_to_rob_rs2_pos[`ROB_POS_TYPE]];
-  assign rob_to_dc_next_rob_pos = {1'b1, loop_tail};
-
+  assign rob_to_dc_rs1_ready     = ready[dc_to_rob_rs1_pos[`ROB_POS_TYPE]];
+  assign rob_to_dc_rs2_ready     = ready[dc_to_rob_rs2_pos[`ROB_POS_TYPE]];
+  assign rob_to_dc_rs1_val       = val[dc_to_rob_rs1_pos[`ROB_POS_TYPE]];
+  assign rob_to_dc_rs2_val       = val[dc_to_rob_rs2_pos[`ROB_POS_TYPE]];
+  assign rob_to_dc_next_rob_pos  = {1'b1, loop_tail};
+  assign rob_to_lsb_head_rob_pos = {1'b1, loop_head};
 
   //  wire [  `ADDR_TYPE] head_pc = pc[loop_head];
   //fuck
@@ -133,7 +133,7 @@ module rob (
     rob_to_if_br_commit_enable  <= `FALSE;
     rob_to_reg_rd               <= 0;
     rob_to_reg_val              <= 0;
-    rob_to_lsb_head_rob_pos     <= {1'b1, loop_head};
+
 
     if (rst || clr) begin
       loop_head               <= 0;

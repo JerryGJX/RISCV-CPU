@@ -88,15 +88,19 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
           //   default: ;
           // endcase
         end else begin  //store
-          if (ls_step == ls_last_step || io_buffer_full) mc_to_mem_wr = `MEM_READ;
+          if (ls_step == ls_last_step) mc_to_mem_wr = `MEM_READ;
           else begin
-            case (ls_step)
-              WAIT_FOR_FIRST_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[15:8];
-              WAIT_FOR_SECOND_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[23:16];
-              WAIT_FOR_THIRD_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[31:24];
-              WAIT_FOR_FOURTH_BYTE: ;
-              default: ;
-            endcase
+            if (mc_to_mem_addr[17:16] != 2'b11 || !io_buffer_full) begin
+              case (ls_step)
+                WAIT_FOR_FIRST_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[15:8];
+                WAIT_FOR_SECOND_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[23:16];
+                WAIT_FOR_THIRD_BYTE: mc_to_mem_dout = lsb_to_mc_st_val[31:24];
+                WAIT_FOR_FOURTH_BYTE: ;
+                default: ;
+              endcase
+            end else begin
+              mc_to_mem_wr = `MEM_READ;
+            end
           end
         end
       end else if (ls_step == IDLE && if_in_run) begin
@@ -148,7 +152,7 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
           if (chose_if) begin
             if_step <= WAIT_FOR_FIRST_BYTE;
           end else if (chose_ls) begin
-            ls_step <= WAIT_FOR_FIRST_BYTE;
+            if (mc_to_mem_addr[17:16] != 2'b11 || !io_buffer_full) ls_step <= WAIT_FOR_FIRST_BYTE;
           end
         end
       end else if (if_step == GEP) begin
@@ -191,8 +195,7 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
           end else begin
             // mc_to_mem_wr <= lsb_to_mc_wr;
             if (ls_step != ls_last_step) begin
-
-              if (lsb_to_mc_wr == `MEM_READ || !io_buffer_full) begin
+              if (lsb_to_mc_wr == `MEM_READ || (mc_to_mem_addr[17:16] != 2'b11 || !io_buffer_full)) begin
                 case (ls_step)
                   WAIT_FOR_FIRST_BYTE: ls_step <= WAIT_FOR_SECOND_BYTE;
                   WAIT_FOR_SECOND_BYTE: ls_step <= WAIT_FOR_THIRD_BYTE;

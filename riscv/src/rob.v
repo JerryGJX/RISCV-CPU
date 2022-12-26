@@ -187,15 +187,6 @@ module rob (
       // end
 
       if (commit_enable) begin
-`ifdef DEBUG
-        $fdisplay(logfile, "Commit ROB #%X (%d)", loop_head, commit_cnt);
-        commit_cnt++;
-        $fdisplay(logfile, "  pc:%X, rd:%X, val:%X, jump:%b, respc:%X, rollback:%b", pc[loop_head],
-                  rd[loop_head], val[loop_head], real_jump[loop_head], dest_pc[loop_head],
-                  pred_jump[loop_head] != real_jump[loop_head]);
-
-        // $fdisplay(logfile, "rob_pos:%X", loop_head);
-`endif
 
         ready[loop_head]     <= `FALSE;
         rd[loop_head]        <= 0;
@@ -240,15 +231,6 @@ module rob (
       end
     end
   end
-
-`ifdef DEBUG
-  integer logfile;
-  integer commit_cnt;
-  initial begin
-    logfile = $fopen("rob.log", "w");
-    commit_cnt = 0;
-  end
-`endif
 
 
 

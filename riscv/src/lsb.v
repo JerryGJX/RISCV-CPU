@@ -219,11 +219,7 @@ module lsb (
         lsb_to_mc_addr    <= 0;
         lsb_to_mc_st_val  <= 0;
         if (head_excutable) begin
-`ifdef DEBUG
-          $fdisplay(logfile, "will Exec %s", head_load_type ? "L" : "S");
-          $fdisplay(logfile, "  addr:%X, w:%X, rob_pos:%X", head_addr, rs2_val[loop_head],
-                    (rob_pos[loop_head][`ROB_POS_TYPE]));
-`endif
+
 
           lsb_to_mc_enable <= `TRUE;
           lsb_to_mc_addr   <= head_addr;
@@ -298,14 +294,6 @@ module lsb (
     end
   end
 
-
-
-`ifdef DEBUG
-  integer logfile;
-  initial begin
-    logfile = $fopen("lsb.log", "w");
-  end
-`endif
 
 
 

@@ -43,9 +43,9 @@ WAIT_FOR_FIRST_BYTE = 3'b100,//for load, get the first byte; for store, put the 
   wire [2:0] if_last_step = WAIT_FOR_FOURTH_BYTE;
   reg [`DATA_TYPE] mem_result;
 
-
-  wire chose_if = (if_to_mc_enable && !lsb_to_mc_enable)||(if_to_mc_enable && lsb_to_mc_enable && last_lsb);
-  wire chose_ls = (!if_to_mc_enable && lsb_to_mc_enable)||(if_to_mc_enable && lsb_to_mc_enable && !last_lsb);
+  wire io_allow = lsb_to_mc_wr == `MEM_READ || lsb_to_mc_addr[17:16] != 2'b11 || !io_buffer_full;
+  wire chose_if = (if_to_mc_enable && !lsb_to_mc_enable)||(if_to_mc_enable && lsb_to_mc_enable && (last_lsb || !io_allow));
+  wire chose_ls = ((!if_to_mc_enable && lsb_to_mc_enable)||(if_to_mc_enable && lsb_to_mc_enable && !last_lsb));
 
   wire executable = (ls_step == IDLE && if_step == IDLE) && rdy && !rst && !clr && (chose_if||chose_ls);
 
